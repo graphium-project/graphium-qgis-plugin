@@ -1,0 +1,52 @@
+# This file contains metadata for your plugin. Since 
+# version 2.0 of QGIS this is the proper way to supply 
+# information about a plugin. The old method of 
+# embedding metadata in __init__.py will 
+# is no longer supported since version 2.0.
+
+# This file should be included when you package your plugin.# Mandatory items:
+
+[general]
+name=Graphium
+# QGIS-version 3.6 QgsNetworkAccessManager.blockingGet()
+qgisMinimumVersion=3.6
+description=QGIS extention for the road network management tool Graphium.
+version=0.6
+author=Simon Gröchenig @ Salzburg Research
+email=graphium@salzburgresearch.at
+
+about=This is a QGIS extension for the road network management tool Graphium. Graphium is available at Github: https://github.com/graphium-project. Features of this plugin include:
+   * Connect to and manage Graphium and GraphiumNeo4j servers
+   * Map-matching
+   * Routing requests
+   * Change detection
+
+tracker=https://github.com/graphium-project/graphium/issues
+repository=https://github.com/graphium-project/graphium
+# End of mandatory metadata
+
+# Recommended items:
+
+# Uncomment the following line and add your changelog:
+changelog=v0.6 (2020-06-29)
+   * License change to Apache 2.0
+   v0.5 (2020-06-29)
+   * [Feature] Add algorithm UpdateSegmentAttribute
+   * [Feature] Add overrideIfExists parameter in gip2graphium/osm2graphium algorithms
+   * [Feature] Additionally save JSON output at DownloadGraphVersion algorithm
+   * [Fixed] Fix parsing timeout_sec if it is not set
+   * [Fixed] Do not allow storing output of gip2graphium/osm2graphium algs in temporary folders
+   * [Fixed] Clear old content in graph name table if connected server does not have any graph names
+   * [Fixed] Clear old content in graph version table if connected graph name does not have any versions
+
+# Tags are comma separated with spaces allowed
+tags=network analysis, vector, postgis
+
+homepage=https://github.com/graphium-project/graphium
+category=Plugins
+icon=icons/icon.png
+# experimental flag
+experimental=False
+
+# deprecated flag (applies to the whole plugin, not just a single version)
+deprecated=False

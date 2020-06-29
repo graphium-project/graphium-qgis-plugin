@@ -1,0 +1,10 @@
+<RCC>
+    <qresource prefix="/plugins/GraphiumQGIS" >
+        <file>icon.png</file>
+        <file>icons\icon.png</file>
+        <file>icons\icon.svg</file>
+        <file>icons\icon_map_matcher.svg</file>
+        <file>icons\icon_routing.svg</file>
+        <file>icons\icon_change_detection.svg</file>
+    </qresource>
+</RCC>

@@ -85,16 +85,18 @@ class GraphiumQGISGraphManager:
 
         self.hide_graph_version_view()
 
+        self.dlg.btnRefreshGraphNames.clicked.connect(self.populate_graph_name_table)
         self.dlg.btnManageSelectedGraphName.clicked.connect(self.show_graph_version_view)
         self.dlg.btnHideGraphVersions.clicked.connect(self.hide_graph_version_view)
         self.dlg.tableGraphNames.doubleClicked .connect(self.show_graph_version_view)
+
+        self.dlg.btnRefreshGraphVersions.clicked.connect(self.populate_graph_version_table)
         self.dlg.btnSelectGraphVersion.clicked.connect(self.set_selected_graph_version)
         self.dlg.btnAddGraphName.clicked.connect(self.add_graph_version)
         self.dlg.btnAddGraphVersion.clicked.connect(self.add_graph_version)
         self.dlg.btnActivateGraphVersion.clicked.connect(self.activate_graph_version)
         self.dlg.btnDownloadGraphVersion.clicked.connect(self.download_graph_version_to_map)
         self.dlg.btnDeleteGraphVersion.clicked.connect(self.remove_graph_version)
-        self.new_graph_file = None
 
         self.dlg.chkFilterStateInitial.setChecked(True)
         self.dlg.chkFilterStateActive.setChecked(True)
@@ -188,6 +190,7 @@ class GraphiumQGISGraphManager:
         self.dlg.btnConnect.setEnabled(False)
         selected_connection_index = self.dlg.cboConnections.currentIndex()
         self.selected_connection = self.connection_manager.connections[selected_connection_index]
+        self.dlg.lblSelectedGraphServer.setText('Selected server: ' + self.selected_connection.name)
         if self.graphium.connect(self.selected_connection):
             self.dlg.tableGraphVersions.setEnabled(True)
             self.iface.messageBar().pushSuccess("Graphium", "Connected to Graphium server [" +
@@ -547,8 +550,9 @@ class GraphiumQGISGraphManager:
                 if conn.name == s:
                     self.selected_connection = conn
         if self.selected_connection is not None:
+            self.dlg.lblSelectedGraphServer.setText('Selected server: ' + self.selected_connection.name)
             self.dlg.lblDefaultGraphiumServer.setText(self.selected_connection.name + ' [' +
-                                                   self.selected_connection.get_connection_url() + ']')
+                                                      self.selected_connection.get_connection_url() + ']')
         else:
             self.dlg.lblDefaultGraphiumServer.setText(self.tr('Graph server not set'))
 

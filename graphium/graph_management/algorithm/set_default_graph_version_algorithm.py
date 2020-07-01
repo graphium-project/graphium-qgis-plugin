@@ -26,15 +26,15 @@
 import os
 # PyQt5 imports
 from PyQt5.QtGui import (QIcon)
-# from qgis.PyQt.QtCore import QCoreApplication
-from qgis.core import (QgsProcessingParameterEnum, QgsProcessingParameterString)
-from processing.algs.qgis.QgisAlgorithm import QgisAlgorithm
+# qgis imports
+from qgis.core import (QgsProcessingAlgorithm, QgsProcessingParameterEnum, QgsProcessingParameterString)
+from qgis.PyQt.QtCore import QCoreApplication
 # plugin
 from ...connection.graphium_connection_manager import GraphiumConnectionManager
 from ...settings import Settings
 
 
-class SetDefaultGraphVersionAlgorithm(QgisAlgorithm):
+class SetDefaultGraphVersionAlgorithm(QgsProcessingAlgorithm):
     """
     This algorithm sets the default graph version that will be set in all Graphium algorithms.
     """
@@ -81,6 +81,12 @@ class SetDefaultGraphVersionAlgorithm(QgisAlgorithm):
 
     def icon(self):
         return QIcon(os.path.join(self.plugin_path, 'icons/icon.svg'))
+
+    def tr(self, string):
+        """
+        Returns a translatable string with the self.tr() function.
+        """
+        return QCoreApplication.translate('Processing', string)
 
     def initAlgorithm(self, config=None):
         """

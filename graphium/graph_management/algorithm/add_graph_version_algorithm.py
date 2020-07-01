@@ -27,16 +27,16 @@ import os
 # PyQt5 imports
 from PyQt5.QtGui import (QIcon)
 # qgis imports
-from processing.algs.qgis.QgisAlgorithm import QgisAlgorithm
-from qgis.core import (QgsProcessingParameterBoolean, QgsProcessingParameterFile, QgsProcessingParameterString,
-                       QgsProcessingParameterEnum, QgsProcessingOutputString)
+from qgis.core import (QgsProcessingAlgorithm, QgsProcessingParameterBoolean, QgsProcessingParameterFile,
+                       QgsProcessingParameterString, QgsProcessingParameterEnum, QgsProcessingOutputString)
+from qgis.PyQt.QtCore import QCoreApplication
 # plugin
 from ...graphium_graph_management_api import GraphiumGraphManagementApi
 from ...connection.graphium_connection_manager import GraphiumConnectionManager
 from ....graphium.settings import Settings
 
 
-class AddGraphVersionAlgorithm(QgisAlgorithm):
+class AddGraphVersionAlgorithm(QgsProcessingAlgorithm):
     """
     This algorithm imports a new graph version to the Graphium server.
     """
@@ -83,6 +83,12 @@ class AddGraphVersionAlgorithm(QgisAlgorithm):
 
     def icon(self):
         return QIcon(os.path.join(self.plugin_path, 'icons/icon.svg'))
+
+    def tr(self, string):
+        """
+        Returns a translatable string with the self.tr() function.
+        """
+        return QCoreApplication.translate('Processing', string)
 
     def initAlgorithm(self, config=None):
         """

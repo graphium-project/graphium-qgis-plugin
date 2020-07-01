@@ -27,16 +27,16 @@ import os
 # PyQt5 imports
 from PyQt5.QtGui import (QIcon)
 # qgis imports
-from qgis.core import (QgsProcessingParameterString, QgsProcessingParameterEnum, QgsProcessingOutputString,
-                       QgsProcessingParameterBoolean)
-from processing.algs.qgis.QgisAlgorithm import QgisAlgorithm
+from qgis.core import (QgsProcessingAlgorithm, QgsProcessingParameterString, QgsProcessingParameterEnum,
+                       QgsProcessingOutputString, QgsProcessingParameterBoolean)
+from qgis.PyQt.QtCore import QCoreApplication
 # plugin
 from ...graphium_graph_management_api import GraphiumGraphManagementApi
 from ...connection.graphium_connection_manager import GraphiumConnectionManager
 from ...settings import Settings
 
 
-class RemoveGraphVersionAlgorithm(QgisAlgorithm):
+class RemoveGraphVersionAlgorithm(QgsProcessingAlgorithm):
     """
     This algorithm removes a graph version from the Graphium server.
     """
@@ -85,6 +85,12 @@ class RemoveGraphVersionAlgorithm(QgisAlgorithm):
 
     def icon(self):
         return QIcon(os.path.join(self.plugin_path, 'icons/icon.svg'))
+
+    def tr(self, string):
+        """
+        Returns a translatable string with the self.tr() function.
+        """
+        return QCoreApplication.translate('Processing', string)
 
     def initAlgorithm(self, config=None):
         """

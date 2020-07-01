@@ -1,6 +1,18 @@
+v0.7 (2020-07-01)
+
+v0.7 (2020-07-01)
+ * [Feature] Add refresh buttons for graph name and version tables
+ * [Improvement] Mention selected server above graph name table
+ * [Improvement] Disable graph management group until successfully connecting to server in manager
+ * [Fixed] Show number of graph versions for each graph name without delay in manager
+ * [Fixed] Do not automatically add /api to url
+ * Temporarily hide is_hd_segments parameter at add graph version algorithm
+
 v0.6 (2020-06-29)
 
- * License change to Apache 2.0
+ * [Feature] License changed to Apache 2.0
+ * [Fixed] Unused geomtools removed
+ * Change Detection Features (Detect Changes Algorithm and Change Set Dialog) temporarily removed
 
 v0.5 (2020-06-29)
 

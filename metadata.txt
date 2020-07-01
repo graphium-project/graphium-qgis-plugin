@@ -28,16 +28,13 @@ repository=https://github.com/graphium-project/graphium
 # Recommended items:
 
 # Uncomment the following line and add your changelog:
-changelog=v0.6 (2020-06-29)
-   * License change to Apache 2.0
-   v0.5 (2020-06-29)
-   * [Feature] Add algorithm UpdateSegmentAttribute
-   * [Feature] Add overrideIfExists parameter in gip2graphium/osm2graphium algorithms
-   * [Feature] Additionally save JSON output at DownloadGraphVersion algorithm
-   * [Fixed] Fix parsing timeout_sec if it is not set
-   * [Fixed] Do not allow storing output of gip2graphium/osm2graphium algs in temporary folders
-   * [Fixed] Clear old content in graph name table if connected server does not have any graph names
-   * [Fixed] Clear old content in graph version table if connected graph name does not have any versions
+changelog=v0.7 (2020-07-01)
+   * [Feature] Add refresh buttons for graph name and version tables
+   * [Improvement] Mention selected server above graph name table
+   * [Improvement] Disable graph management group until successfully connecting to server in manager
+   * [Fixed] Show number of graph versions for each graph name without delay in manager
+   * [Fixed] Do not automatically add /api to url
+   * Temporarily hide is_hd_segments parameter at add graph version algorithm
 
 # Tags are comma separated with spaces allowed
 tags=network analysis, vector, postgis

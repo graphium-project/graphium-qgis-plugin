@@ -4,6 +4,7 @@ v0.7 (2020-07-01)
  * [Feature] Add refresh buttons for graph name and version tables
  * [Improvement] Mention selected server above graph name table
  * [Improvement] Disable graph management group until successfully connecting to server in manager
+ * [Improvement] Graph name/version set as default is displayed with bold font in table in manager
  * [Fixed] Show number of graph versions for each graph name without delay in manager
  * [Fixed] Do not automatically add /api to url
  * Temporarily hide is_hd_segments parameter at add graph version algorithm

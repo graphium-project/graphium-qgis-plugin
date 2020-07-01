@@ -41,17 +41,10 @@ class Connection:
         if self.host[0:4] != 'http':
             protocol = 'http://'
 
-        base_url_api = ''
-        if self.base_url[-3:] != 'api':
-            if self.base_url[-1:] == '/':
-                base_url_api = 'api'
-            else:
-                base_url_api = '/api'
-
         if self.port is not None:
-            return protocol + self.host + ':' + str(self.port) + '/' + self.base_url + base_url_api
+            return protocol + self.host + ':' + str(self.port) + '/' + self.base_url
         else:
-            return protocol + self.host + '/' + self.base_url + base_url_api
+            return protocol + self.host + '/' + self.base_url
 
     def get_simple_url(self):
         if self.port is not None:

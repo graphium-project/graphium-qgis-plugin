@@ -128,7 +128,7 @@
          <item>
           <layout class="QHBoxLayout" name="horizontalLayout_3">
            <item>
-            <widget class="QLabel" name="lblSelectedGraphServer">
+            <widget class="QLabel" name="lblConnectedGraphServer">
              <property name="text">
               <string>Selected server</string>
              </property>
@@ -347,7 +347,7 @@
          <item>
           <layout class="QHBoxLayout" name="layoutGraphVersionToolsBottom">
            <item>
-            <widget class="QPushButton" name="btnSelectGraphVersion">
+            <widget class="QPushButton" name="btnSetDefaultGraphVersion">
              <property name="text">
               <string>Set as default</string>
              </property>

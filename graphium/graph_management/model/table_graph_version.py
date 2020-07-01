@@ -24,6 +24,7 @@
 """
 
 from PyQt5.QtCore import Qt, QAbstractTableModel
+from PyQt5.QtGui import QFont
 from datetime import datetime
 
 
@@ -41,6 +42,7 @@ class TableGraphVersionModel(QAbstractTableModel):
         super(TableGraphVersionModel, self).__init__()
         self._array_data = data_in
         self._header_data = header_data
+        self.default_graph_version_index = -1
         self.update_graph_version_validity = update_graph_version_validity
 
     def rowCount(self, parent=None, *args):
@@ -79,6 +81,11 @@ class TableGraphVersionModel(QAbstractTableModel):
             elif index.column() == 5:
                 d = self._array_data[index.row()]['validTo']
                 return d.strftime(self.date_format) if d is not None else ''
+        elif role == Qt.FontRole:
+            if self.default_graph_version_index >= 0 and index.row() == self.default_graph_version_index:
+                font = QFont()
+                font.setBold(True)
+                return font
         return None
 
     def setData(self, index, value, role=Qt.EditRole):

@@ -266,6 +266,9 @@ class GraphiumApi:
             self.connection = None
             return False
 
+    def disconnect(self):
+        self.connection = None
+
     def check_connection(self):
         url = self.connection.get_connection_url() + '/status'
         response = self.process_get_call(url, None)

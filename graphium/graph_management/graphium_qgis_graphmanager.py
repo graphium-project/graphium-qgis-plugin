@@ -75,6 +75,14 @@ class GraphiumQGISGraphManager:
             self.translator.load(locale_path)
             QCoreApplication.installTranslator(self.translator)
 
+        # graphium
+        self.graphium = GraphiumGraphManagementApi()
+        self.connection_manager = GraphiumConnectionManager()
+        self.selected_connection = None
+        self.graph_names = []
+        self.table_graph_names_data = []
+        self.graph_versions = []
+
         # Create the dialog (after translation) and keep reference
         self.dlg = GraphiumQGISGraphManagerDialog(parent=self.iface.mainWindow())
 
@@ -83,15 +91,15 @@ class GraphiumQGISGraphManager:
         self.dlg.btnEditConnection.clicked.connect(self.edit_connection)
         self.dlg.btnRemoveConnection.clicked.connect(self.remove_connection)
 
-        self.hide_graph_version_view()
+        self.switch_to_graph_name_view()
 
-        self.dlg.btnRefreshGraphNames.clicked.connect(self.populate_graph_name_table)
-        self.dlg.btnManageSelectedGraphName.clicked.connect(self.show_graph_version_view)
-        self.dlg.btnHideGraphVersions.clicked.connect(self.hide_graph_version_view)
-        self.dlg.tableGraphNames.doubleClicked .connect(self.show_graph_version_view)
+        self.dlg.btnRefreshGraphNames.clicked.connect(self.switch_to_graph_name_view)
+        self.dlg.btnManageSelectedGraphName.clicked.connect(self.switch_to_graph_version_view)
+        self.dlg.tableGraphNames.doubleClicked .connect(self.switch_to_graph_version_view)
 
-        self.dlg.btnRefreshGraphVersions.clicked.connect(self.populate_graph_version_table)
-        self.dlg.btnSelectGraphVersion.clicked.connect(self.set_selected_graph_version)
+        self.dlg.btnHideGraphVersions.clicked.connect(self.switch_to_graph_name_view)
+        self.dlg.btnRefreshGraphVersions.clicked.connect(self.switch_to_graph_version_view)
+        self.dlg.btnSetDefaultGraphVersion.clicked.connect(self.set_default_graph_version)
         self.dlg.btnAddGraphName.clicked.connect(self.add_graph_version)
         self.dlg.btnAddGraphVersion.clicked.connect(self.add_graph_version)
         self.dlg.btnActivateGraphVersion.clicked.connect(self.activate_graph_version)
@@ -102,24 +110,15 @@ class GraphiumQGISGraphManager:
         self.dlg.chkFilterStateActive.setChecked(True)
         self.dlg.chkFilterStateDeleted.setChecked(False)
 
-        self.dlg.chkFilterStateInitial.toggled.connect(self.populate_graph_version_table)
-        self.dlg.chkFilterStateActive.toggled.connect(self.populate_graph_version_table)
-        self.dlg.chkFilterStateDeleted.toggled.connect(self.populate_graph_version_table)
+        self.dlg.chkFilterStateInitial.toggled.connect(self.switch_to_graph_version_view)
+        self.dlg.chkFilterStateActive.toggled.connect(self.switch_to_graph_version_view)
+        self.dlg.chkFilterStateDeleted.toggled.connect(self.switch_to_graph_version_view)
 
         self.dlg.lblDefaultGraphiumServer.setTextInteractionFlags(Qt.TextSelectableByMouse)
         self.dlg.lblDefaultGraphName.setTextInteractionFlags(Qt.TextSelectableByMouse)
         self.dlg.lblDefaultGraphVersion.setTextInteractionFlags(Qt.TextSelectableByMouse)
 
         self.graph_file_default_dir = Settings.get_graph_file_default_dir()
-
-        self.selected_connection = None
-
-        # graphium
-        self.graphium = GraphiumGraphManagementApi()
-        self.connection_manager = GraphiumConnectionManager()
-        self.graph_names = []
-        self.table_graph_names_data = []
-        self.graph_versions = []
 
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
@@ -187,49 +186,68 @@ class GraphiumQGISGraphManager:
             self.iface.messageBar().pushMessage("Graphium", "No Graphium server selected", level=Qgis.Critical)
             return
 
-        self.dlg.btnConnect.setEnabled(False)
         selected_connection_index = self.dlg.cboConnections.currentIndex()
         self.selected_connection = self.connection_manager.connections[selected_connection_index]
-        self.dlg.lblSelectedGraphServer.setText('Selected server: ' + self.selected_connection.name)
+
         if self.graphium.connect(self.selected_connection):
-            self.dlg.tableGraphVersions.setEnabled(True)
             self.iface.messageBar().pushSuccess("Graphium", "Connected to Graphium server [" +
                                                 self.selected_connection.name + "]")
-            self.populate_graph_name_table()
-            self.hide_graph_version_view()
-            # self.import_graph_names()
-
         else:
-            self.dlg.tableGraphVersions.setEnabled(False)
             self.iface.messageBar().pushMessage("Graphium", "Cannot connect to Graphium server [" +
                                                 self.selected_connection.name + "]", level=Qgis.Warning)
-        self.dlg.btnConnect.setEnabled(True)
+            self.selected_connection = None
 
-    def populate_graph_name_table(self):
+        self.switch_to_graph_name_view()
+
+    def switch_to_graph_name_view(self):
         """
         Reads the versions of the selected graph name and updates the graph version table in dialog
         :return:
         """
 
-        response = self.graphium.get_graph_names()
-        if 'error' in response:
-            self.iface.messageBar().pushMessage("Graphium", "Cannot retrieve graphs from Graphium server [" +
-                                                self.selected_connection.name + "], Reason: " +
-                                                response['error']['msg'], level=Qgis.Warning)
-            self.graph_names = []
-        else:
-            self.graph_names = response
+        self.dlg.widgetGraphNames.show()
+        self.dlg.widgetGraphVersions.hide()
 
-        selected_graph_name = Settings.get_selected_graph_name()
+        if self.selected_connection:
+            self.dlg.widgetGraphNames.setEnabled(True)
+            self.dlg.lblConnectedGraphServer.setText('Connected server: ' + self.selected_connection.name)
+        else:
+            self.dlg.widgetGraphNames.setEnabled(False)
+            self.dlg.lblConnectedGraphServer.setText('Connected server: None')
+
+        self.graph_names = []
+        if self.selected_connection:
+            response = self.graphium.get_graph_names()
+            if not 'error' in response:
+                self.graph_names = response
+            else:
+                self.iface.messageBar().pushMessage("Graphium", "Cannot retrieve graphs from Graphium server [" +
+                                                    self.selected_connection.name + "], Reason: " +
+                                                    response['error']['msg'], level=Qgis.Warning)
+
+        default_graph_name = Settings.get_selected_graph_name()
+        default_graph_name_index = -1
 
         self.graph_names = sorted(self.graph_names)
 
         self.table_graph_names_data = list()
-        for graph_name in self.graph_names:
+        for index, graph_name in enumerate(self.graph_names):
             self.table_graph_names_data.append({
                 'name': graph_name,
                 'graph_version_count': None
             })
+            if graph_name == default_graph_name:
+                default_graph_name_index = index
+
+        threads = []
+        for index, graph_name in enumerate(self.graph_names):
+            t = threading.Thread(target=self.get_number_of_graph_versions, args=(index,),
+                                 daemon=True)
+            threads.append(t)
+            t.start()
+
+        for thread in threads:
+            thread.join()
 
         # create the view
         table_view = self.dlg.tableGraphNames
@@ -237,6 +255,7 @@ class GraphiumQGISGraphManager:
         # set the table model
         header = ['Graph name', 'Graph version count']
         tm = TableGraphNameModel(self.table_graph_names_data, header)
+        tm.default_graph_name_index = default_graph_name_index
         table_view.setModel(tm)
 
         # show grid
@@ -256,31 +275,30 @@ class GraphiumQGISGraphManager:
         # disable sorting
         table_view.setSortingEnabled(False)
 
-        # number_graph_versions_threads = []
-        for index, graph_name in enumerate(self.graph_names):
-            t = threading.Thread(target=self.get_number_of_graph_versions, args=(index,),
-                                 daemon=True)
-            t.start()
-
     def get_number_of_graph_versions(self, graphname_index):
         response = self.graphium.get_graph_versions(self.table_graph_names_data[graphname_index]['name'])
         if 'error' in response:
             self.table_graph_names_data[graphname_index]['graph_version_count'] = 0
         else:
             self.table_graph_names_data[graphname_index]['graph_version_count'] = len(response)
-        self.dlg.tableGraphNames.model().update()
 
-    def populate_graph_version_table(self):
+    def switch_to_graph_version_view(self):
         """
         Reads the versions of the selected graph name and updates the graph version table in dialog
         :return:
         """
 
-        selected_name = self.get_selected_graph_name()
-        if selected_name is None:
+        selected_graph_name = self.get_selected_graph_name()
+        if selected_graph_name is None:
+            self.iface.messageBar().pushMessage('No graph name selected...')
+            self.switch_to_graph_name_view()
             return
 
-        response = self.graphium.get_graph_versions(selected_name)
+        self.dlg.widgetGraphNames.hide()
+        self.dlg.widgetGraphVersions.show()
+        self.dlg.lblSelectedGraphName.setText('Selected graph name: ' + selected_graph_name)
+
+        response = self.graphium.get_graph_versions(selected_graph_name)
         if 'error' in response:
             self.iface.messageBar().pushMessage("Graphium", "Cannot retrieve graph versions from Graphium server [" +
                                                 self.selected_connection.name + "]", level=Qgis.Warning)
@@ -297,8 +315,11 @@ class GraphiumQGISGraphManager:
 
         self.graph_versions = sorted(self.graph_versions, key=lambda entry: entry['validFrom'])
 
+        default_graph_version = Settings.get_selected_graph_version()
+        default_graph_version_index = -1
+
         table_data = list()
-        for version in self.graph_versions:
+        for index, version in enumerate(self.graph_versions):
             valid_from = datetime.utcfromtimestamp(version.get('validFrom', 0) / 1000) if 'validFrom' in version else \
                 None
             valid_to = datetime.utcfromtimestamp(version.get('validTo', 0) / 1000) if 'validTo' in version else None
@@ -309,6 +330,8 @@ class GraphiumQGISGraphManager:
                                'state': version.get('state'),
                                'validFrom': valid_from,
                                'validTo': valid_to})
+            if version['version'] == default_graph_version:
+                default_graph_version_index = index
 
         # create the view
         table_view = self.dlg.tableGraphVersions
@@ -316,6 +339,7 @@ class GraphiumQGISGraphManager:
         # set the table model
         header = ['ID', 'Graph version', 'Type', 'State', 'Valid From', 'Valid To']
         tm = TableGraphVersionModel(table_data, header, self.update_graph_version_validity, self)
+        tm.default_graph_version_index = default_graph_version_index
         table_view.setModel(tm)
 
         # # https://gist.github.com/Riateche/5984815
@@ -339,31 +363,6 @@ class GraphiumQGISGraphManager:
         # disable sorting
         table_view.setSortingEnabled(False)
 
-    def show_graph_version_view(self):
-        """
-        Shows the graph version table for the selected graph name
-        """
-
-        selected_graph_name = self.get_selected_graph_name()
-
-        if selected_graph_name is None:
-            return
-
-        self.dlg.lblSelectedGraphName.setText('Selected graph name: ' + selected_graph_name)
-
-        self.populate_graph_version_table()
-
-        self.dlg.widgetGraphNames.hide()
-        self.dlg.widgetGraphVersions.show()
-
-    def hide_graph_version_view(self):
-        """
-        Shows the graph version table for the selected graph name
-        """
-
-        self.dlg.widgetGraphNames.show()
-        self.dlg.widgetGraphVersions.hide()
-
     def add_graph_version(self):
         """
         Opens an algorithm dialog to add a new graph version
@@ -379,7 +378,8 @@ class GraphiumQGISGraphManager:
 
         processing.execAlgorithmDialog("Graphium:AddGraphVersion", parameters)
 
-        self.refresh_graphs_versions()
+        # update ui
+        self.switch_to_graph_version_view()
 
     def remove_graph_version(self):
         """
@@ -395,8 +395,6 @@ class GraphiumQGISGraphManager:
                                                    'Do you really want to REMOVE the selected graph version?',
                                                    QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
             if reply == QtWidgets.QMessageBox.Yes:
-                self.dlg.tableGraphVersions.setEnabled(False)
-
                 parameters = {
                     RemoveGraphVersionAlgorithm.SERVER_NAME: self.dlg.cboConnections.currentIndex(),
                     RemoveGraphVersionAlgorithm.GRAPH_NAME: graph_name,
@@ -409,7 +407,8 @@ class GraphiumQGISGraphManager:
                     self.iface.messageBar().pushMessage("Warning", "Could not remove graph version",
                                                         level=Qgis.Critical)
 
-                self.refresh_graphs_versions()
+                # update ui
+                self.switch_to_graph_version_view()
 
         else:
             self.iface.messageBar().pushMessage("Warning", "Cannot remove graph version with state [DELETED]",
@@ -430,8 +429,6 @@ class GraphiumQGISGraphManager:
                                                    'Do you really want to ACTIVATE the selected graph version?',
                                                    QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
             if reply == QtWidgets.QMessageBox.Yes:
-                self.dlg.tableGraphVersions.setEnabled(False)
-
                 parameters = {
                         ActivateGraphVersionAlgorithm.SERVER_NAME: self.dlg.cboConnections.currentIndex(),
                         ActivateGraphVersionAlgorithm.GRAPH_NAME: graph_name,
@@ -444,10 +441,31 @@ class GraphiumQGISGraphManager:
                     self.iface.messageBar().pushMessage("Warning", "Could not activate graph version",
                                                         level=Qgis.Critical)
 
-                self.refresh_graphs_versions()
+                # update ui
+                self.switch_to_graph_version_view()
         else:
             self.iface.messageBar().pushMessage("Warning", "Cannot activate graph version with state [" +
                                                 graph_version['state'] + "]", level=Qgis.Warning)
+
+    def update_graph_version_validity(self, graph_version, attribute, valid_date):
+        selected_name = self.get_selected_graph_name()
+
+        parameters = {
+            UpdateGraphVersionAttributeAlgorithm.SERVER_NAME: self.selected_connection.name,
+            UpdateGraphVersionAttributeAlgorithm.GRAPH_NAME: selected_name,
+            UpdateGraphVersionAttributeAlgorithm.GRAPH_VERSION: graph_version,
+            UpdateGraphVersionAttributeAlgorithm.ATTRIBUTE: attribute,
+            UpdateGraphVersionAttributeAlgorithm.NEW_VALUE: valid_date
+        }
+
+        try:
+            processing.execAlgorithmDialog("Graphium:UpdateGraphVersionAttribute", parameters)
+        except QgsProcessingException:
+            self.iface.messageBar().pushMessage("Warning", "Could not update graph version validity",
+                                                level=Qgis.Critical)
+
+        # update ui
+        self.switch_to_graph_version_view()
 
     def download_graph_version_to_map(self):
         """
@@ -470,20 +488,24 @@ class GraphiumQGISGraphManager:
             self.iface.messageBar().pushMessage("Warning", "Could not download the selected graph version",
                                                 level=Qgis.Critical)
 
-    def set_selected_graph_version(self):
+    def set_default_graph_version(self):
         """
-        Sets selected (default) graph name and version
+        Sets default server, graph name and graph version
         :return:
         """
         graph_name, graph_version = self.get_selected_graph_name_and_version()
-        if graph_version is None:
+        if graph_name is None:
             self.iface.messageBar().pushMessage("Warning", "No graph name selected!")
+            return
+        if graph_version is None:
+            self.iface.messageBar().pushMessage("Warning", "No graph version selected!")
             return
 
         Settings.set_selected_graph_version(self.selected_connection.name, graph_name, graph_version['version'])
 
-        self.set_graph()
-        self.check_server()
+        # update ui
+        self.switch_to_graph_version_view()
+        self.set_default_graph()
 
     def get_selected_graph_name(self):
         """
@@ -518,63 +540,46 @@ class GraphiumQGISGraphManager:
 
         return selected_graph_name, selected_graph_version
 
-    def update_graph_version_validity(self, graph_version, attribute, valid_date):
-        selected_name = self.get_selected_graph_name()
-        self.dlg.tableGraphVersions.setEnabled(False)
-
-        parameters = {
-            UpdateGraphVersionAttributeAlgorithm.SERVER_NAME: self.selected_connection.name,
-            UpdateGraphVersionAttributeAlgorithm.GRAPH_NAME: selected_name,
-            UpdateGraphVersionAttributeAlgorithm.GRAPH_VERSION: graph_version,
-            UpdateGraphVersionAttributeAlgorithm.ATTRIBUTE: attribute,
-            UpdateGraphVersionAttributeAlgorithm.NEW_VALUE: valid_date
-        }
-
-        try:
-            processing.execAlgorithmDialog("Graphium:UpdateGraphVersionAttribute", parameters)
-        except QgsProcessingException:
-            self.iface.messageBar().pushMessage("Warning", "Could not update graph version validity",
-                                                level=Qgis.Critical)
-        self.refresh_graphs_versions()
-
-    def refresh_graphs_versions(self):
-        self.populate_graph_version_table()
-        self.dlg.tableGraphVersions.setEnabled(True)
-
-    def set_graph(self):
-        self.selected_connection = None
+    def set_default_graph(self):
         s = Settings.get_selected_graph_server()
+        connection = None
         if isinstance(s, str):
             self.connection_manager.read_connections(None)
             for conn in self.connection_manager.connections:
                 if conn.name == s:
-                    self.selected_connection = conn
-        if self.selected_connection is not None:
-            self.dlg.lblSelectedGraphServer.setText('Selected server: ' + self.selected_connection.name)
-            self.dlg.lblDefaultGraphiumServer.setText(self.selected_connection.name + ' [' +
-                                                      self.selected_connection.get_connection_url() + ']')
+                    connection = conn
+        if connection is not None:
+            self.dlg.lblDefaultGraphiumServer.setText(connection.name + ' [' +
+                                                      connection.get_connection_url() + ']')
         else:
             self.dlg.lblDefaultGraphiumServer.setText(self.tr('Graph server not set'))
 
         s = Settings.get_selected_graph_name()
         if isinstance(s, str):
             self.dlg.lblDefaultGraphName.setText(s)
+        else:
+            self.dlg.lblDefaultGraphName.setText('No default graph name set!')
         s = Settings.get_selected_graph_version()
         if isinstance(s, str):
             self.dlg.lblDefaultGraphVersion.setText(s)
+        else:
+            self.dlg.lblDefaultGraphVersion.setText('No default graph version set!')
 
-    def check_server(self):
-        if self.graphium.connect(self.selected_connection) is False:
+        if connection:
+            self.dlg.lblServerStatus.setText('Check connection')
+            check_server_thread = threading.Thread(target=self.check_server, args=(connection,), daemon=True)
+            check_server_thread.start()
+
+    def check_server(self, connection):
+        graphium_for_check = GraphiumGraphManagementApi()
+        if graphium_for_check.connect(connection) is False:
             self.dlg.lblServerStatus.setText('Server does not respond!')
         else:
             self.dlg.lblServerStatus.setText('Server is listening...')
+        graphium_for_check.disconnect()
 
     def run(self):
-
-        self.set_graph()
-
-        check_server_thread = threading.Thread(target=self.check_server, args=(), daemon=True)
-        check_server_thread.start()
+        self.set_default_graph()
 
         self.read_connections()
 

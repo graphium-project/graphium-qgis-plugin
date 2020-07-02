@@ -237,14 +237,14 @@ class Osm2GraphiumAlgorithm(QgsProcessingAlgorithm):
         feedback.pushInfo('This process will take several minutes...')
 
         try:
-            process = subprocess.run(args, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+            process = subprocess.run(args, check=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
 
-            out = process.stdout.decode('utf-8')
-            if out:
-                feedback.pushInfo(out)
-            error = process.stderr.decode('utf-8')
-            if error:
-                feedback.reportError(error)
+            try:
+                out = process.stdout.decode('utf-8')
+                if out:
+                    feedback.pushInfo(out)
+            except UnicodeDecodeError:
+                feedback.reportError("Cannot decode response!")
 
             return {self.OUTPUT_DIRECTORY: output_directory,
                     self.OUTPUT_JSON: output_directory + '/' + graph_name + '_' + graph_version + '.json'}

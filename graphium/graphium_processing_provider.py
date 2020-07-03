@@ -38,6 +38,8 @@ from ..graphium.graph_data.algorithm.update_segment_attribute_algorithm import (
 from ..graphium.graph_data.algorithm.update_segment_geometry_algorithm import (UpdateSegmentGeometryAlgorithm)
 from ..graphium.graph_management.algorithm.update_graph_version_attribute_algorithm import\
     (UpdateGraphVersionAttributeAlgorithm)
+from ..graphium.graph_management.algorithm.update_graph_version_validity_algorithm import (
+    UpdateGraphVersionValidityAlgorithm)
 from ..graphium.graph_management.algorithm.add_graph_version_algorithm import (AddGraphVersionAlgorithm)
 from ..graphium.graph_management.algorithm.activate_graph_version_algorithm import (ActivateGraphVersionAlgorithm)
 from ..graphium.graph_management.algorithm.remove_graph_version_algorithm import (RemoveGraphVersionAlgorithm)
@@ -125,3 +127,4 @@ class GraphiumProcessingProvider(QgsProcessingProvider):
         self.addAlgorithm(Gip2GraphiumAlgorithm())
         self.addAlgorithm(Osm2GraphiumAlgorithm())
         self.addAlgorithm(UpdateSegmentAttributeAlgorithm())
+        self.addAlgorithm(UpdateGraphVersionValidityAlgorithm())

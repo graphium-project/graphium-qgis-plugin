@@ -107,7 +107,7 @@ class TableGraphVersionModel(QAbstractTableModel):
                     return False
                 if self._array_data[index.row()]['validFrom'] != new_datetime:
                     self._array_data[index.row()]['validFrom'] = new_datetime
-                    self.update_graph_version_validity(graph_version, 'validFrom', new_datetime.timestamp() * 1000)
+                    self.update_graph_version_validity(graph_version, 'validFrom', value)
             if index.column() == 5:
                 try:
                     new_datetime = datetime.strptime(value + '+0000', self.date_read_format)
@@ -115,7 +115,7 @@ class TableGraphVersionModel(QAbstractTableModel):
                     return False
                 if self._array_data[index.row()]['validTo'] != new_datetime:
                     self._array_data[index.row()]['validTo'] = new_datetime
-                    self.update_graph_version_validity(graph_version, 'validTo', new_datetime.timestamp() * 1000)
+                    self.update_graph_version_validity(graph_version, 'validTo', value)
         return True
 
     def flags(self, index):

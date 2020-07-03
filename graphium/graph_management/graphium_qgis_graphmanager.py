@@ -454,12 +454,12 @@ class GraphiumQGISGraphManager:
             UpdateGraphVersionAttributeAlgorithm.SERVER_NAME: self.selected_connection.name,
             UpdateGraphVersionAttributeAlgorithm.GRAPH_NAME: selected_name,
             UpdateGraphVersionAttributeAlgorithm.GRAPH_VERSION: graph_version,
-            UpdateGraphVersionAttributeAlgorithm.ATTRIBUTE: attribute,
+            UpdateGraphVersionAttributeAlgorithm.ATTRIBUTE: 0 if attribute == 'validFrom' else 1,
             UpdateGraphVersionAttributeAlgorithm.NEW_VALUE: valid_date
         }
 
         try:
-            processing.execAlgorithmDialog("Graphium:UpdateGraphVersionAttribute", parameters)
+            processing.execAlgorithmDialog("Graphium:UpdateGraphVersionValidity", parameters)
         except QgsProcessingException:
             self.iface.messageBar().pushMessage("Warning", "Could not update graph version validity",
                                                 level=Qgis.Critical)

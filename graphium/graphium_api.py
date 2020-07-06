@@ -106,6 +106,9 @@ class GraphiumApi:
         return self.process_qgs_reply(reply)
 
     def process_put_call(self, url, data=None):
+
+        self.report_info(url)
+
         try:
             response = requests.put(url)
         except urllib.error.HTTPError as e:

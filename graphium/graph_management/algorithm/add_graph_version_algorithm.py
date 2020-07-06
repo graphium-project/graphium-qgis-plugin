@@ -66,6 +66,9 @@ class AddGraphVersionAlgorithm(QgsProcessingAlgorithm):
         self.connection_manager = GraphiumConnectionManager()
         self.server_name_options = list()
 
+    def createInstance(self):
+        return AddGraphVersionAlgorithm()
+
     def group(self):
         return self.tr(self.alg_group)
 

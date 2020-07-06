@@ -61,6 +61,9 @@ class SetDefaultGraphVersionAlgorithm(QgsProcessingAlgorithm):
         self.connection_manager = GraphiumConnectionManager()
         self.server_name_options = list()
 
+    def createInstance(self):
+        return SetDefaultGraphVersionAlgorithm()
+
     def tags(self):
         return self.tr('default,graph,version,graphium').split(',')
 

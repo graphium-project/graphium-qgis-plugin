@@ -64,6 +64,9 @@ class RemoveGraphVersionAlgorithm(QgsProcessingAlgorithm):
         self.connection_manager = GraphiumConnectionManager()
         self.server_name_options = list()
 
+    def createInstance(self):
+        return RemoveGraphVersionAlgorithm()
+
     def tags(self):
         return self.tr('activate,graph,version,graphium').split(',')
 

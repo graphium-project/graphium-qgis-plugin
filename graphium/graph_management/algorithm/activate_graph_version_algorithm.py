@@ -63,6 +63,9 @@ class ActivateGraphVersionAlgorithm(QgsProcessingAlgorithm):
         self.connection_manager = GraphiumConnectionManager()
         self.connection_options = list()
 
+    def createInstance(self):
+        return ActivateGraphVersionAlgorithm()
+
     def tags(self):
         return self.tr('activate,graph,version,graphium').split(',')
 

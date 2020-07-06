@@ -55,8 +55,8 @@ class GraphiumApi:
         self.connection = None
         self.feedback = feedback
 
-        self.timeout_sec = int(QSettings().value('plugin-graphium/timeout_sec', None))
-        if self.timeout_sec is None:
+        self.timeout_sec = int(QSettings().value('plugin-graphium/timeout_sec', -1))
+        if self.timeout_sec == -1:
             QSettings().setValue("plugin-graphium/timeout_sec", 60*10)
         self.timeout_sec = int(QSettings().value('plugin-graphium/timeout_sec', 60*10))
 

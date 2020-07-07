@@ -24,6 +24,7 @@
 """
 
 import os
+from datetime import datetime
 import subprocess
 # PyQt5 imports
 from PyQt5.QtCore import QSettings
@@ -62,6 +63,8 @@ class Osm2GraphiumAlgorithm(QgsProcessingAlgorithm):
         self.SERVER_NAME = 'SERVER_NAME'
         self.GRAPH_NAME = 'GRAPH_NAME'
         self.GRAPH_VERSION = 'GRAPH_VERSION'
+        self.VALID_FROM = 'VALID_FROM'
+        self.VALID_TO = 'VALID_TO'
         self.BOUNDS = 'BOUNDS'
         self.USE_HIGHWAY_TYPES = 'USE_HIGHWAY_TYPES'
         self.HIGHWAY_TYPES = 'HIGHWAY_TYPES'
@@ -73,6 +76,7 @@ class Osm2GraphiumAlgorithm(QgsProcessingAlgorithm):
         self.OUTPUT_DIRECTORY = 'OUTPUT_DIRECTORY'
         self.OUTPUT_JSON = 'OUTPUT_JSON'
 
+        self.valid_timestamp_format = '%Y-%m-%d %H:%M'
         self.highway_options = []
         self.highway_option_values = []
         for highway_type in OsmHighwayTypes:
@@ -157,6 +161,13 @@ class Osm2GraphiumAlgorithm(QgsProcessingAlgorithm):
         self.addParameter(QgsProcessingParameterString(self.GRAPH_VERSION, self.tr('Graph version'),
                                                        default_graph_version, False, False))
 
+        default_valid_from = datetime.today().strftime(self.valid_timestamp_format)
+        self.addParameter(QgsProcessingParameterString(self.VALID_FROM, self.tr('Valid from'),
+                                                       default_valid_from, False, True))
+
+        self.addParameter(QgsProcessingParameterString(self.VALID_TO, self.tr('Valid to'),
+                                                       '', False, True))
+
         # self.addParameter(QgsProcessingParameterExtent(self.BOUNDS, self.tr('Bounding box'), True))
 
         self.addParameter(QgsProcessingParameterBoolean(self.USE_HIGHWAY_TYPES, self.tr('Use highway types'),
@@ -183,6 +194,24 @@ class Osm2GraphiumAlgorithm(QgsProcessingAlgorithm):
         self.addParameter(QgsProcessingParameterFile(self.OUTPUT_DIRECTORY, self.tr('Output directory'),
                                                      QgsProcessingParameterFile.Folder, optional=False))
 
+    def checkParameterValues(self, parameters, context):
+        ok, message = super(Osm2GraphiumAlgorithm, self).checkParameterValues(parameters, context)
+        if ok:
+            valid_from = self.parameterAsString(parameters, self.VALID_FROM, context)
+            if valid_from != '':
+                try:
+                    datetime.strptime(valid_from, self.valid_timestamp_format)
+                except ValueError:
+                    ok, message = False, 'Cannot parse valid_from (format ' + self.valid_timestamp_format + ')'
+            valid_to = self.parameterAsString(parameters, self.VALID_TO, context)
+            if valid_to != '':
+                try:
+                    datetime.strptime(valid_to, self.valid_timestamp_format)
+                except ValueError:
+                    ok, message = False, 'Cannot parse valid_to (format ' + self.valid_timestamp_format + ')'
+
+        return ok, message
+
     def processAlgorithm(self, parameters, context, feedback):
         # pass
         source_java = self.parameterAsFile(parameters, self.INPUT_JAVA, context)
@@ -191,6 +220,8 @@ class Osm2GraphiumAlgorithm(QgsProcessingAlgorithm):
         server_name_index = self.parameterAsEnum(parameters, self.SERVER_NAME, context)
         graph_name = self.parameterAsString(parameters, self.GRAPH_NAME, context)
         graph_version = self.parameterAsString(parameters, self.GRAPH_VERSION, context)
+        valid_from = self.parameterAsString(parameters, self.VALID_FROM, context)
+        valid_to = self.parameterAsString(parameters, self.VALID_TO, context)
         # boundingbox = self.parameterAsExtent(parameters, self.BOUNDS, context)
         use_highway_types = self.parameterAsBoolean(parameters, self.USE_HIGHWAY_TYPES, context)
         highway_type_indexes = self.parameterAsEnums(parameters, self.HIGHWAY_TYPES, context)
@@ -219,7 +250,10 @@ class Osm2GraphiumAlgorithm(QgsProcessingAlgorithm):
         args = [source_java, '-jar', source_osm2graphium,
                 '-i', source, '-o', output_directory,
                 '-n', graph_name, '-v', graph_version]
-        # if len(highway_type_indexes) > 0:
+        if valid_from != '':
+            args.extend(['-vf', valid_from])
+        if valid_to != '':
+            args.extend(['-vt', valid_to])
         if use_highway_types:
             args.extend(['--highwayTypes', highway_types])
         # '--valid-from', valid_from, '--valid-to', valid_to,

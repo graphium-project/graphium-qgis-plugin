@@ -24,6 +24,7 @@
 """
 
 import os
+from datetime import datetime
 import subprocess
 # PyQt5 imports
 from PyQt5.QtCore import QSettings
@@ -63,6 +64,8 @@ class Gip2GraphiumAlgorithm(QgsProcessingAlgorithm):
         self.SERVER_NAME = 'SERVER_NAME'
         self.GRAPH_NAME = 'GRAPH_NAME'
         self.GRAPH_VERSION = 'GRAPH_VERSION'
+        self.VALID_FROM = 'VALID_FROM'
+        self.VALID_TO = 'VALID_TO'
         self.IMPORT_FRCS = 'IMPORT_FRCS'
         self.ACCESS_TYPES = 'ACCESS_TYPES'
         # self.SKIP_GIP_IMPORT = 'SKIP_GIP_IMPORT'
@@ -77,6 +80,7 @@ class Gip2GraphiumAlgorithm(QgsProcessingAlgorithm):
         self.OUTPUT_DIRECTORY = 'OUTPUT_DIRECTORY'
         self.OUTPUT_JSON = 'OUTPUT_JSON'
 
+        self.valid_timestamp_format = '%Y-%m-%d %H:%M'
         self.frc_options = []
         self.frc_option_values = []
         for frc in FunctionalRoadClass:
@@ -163,6 +167,13 @@ class Gip2GraphiumAlgorithm(QgsProcessingAlgorithm):
         self.addParameter(QgsProcessingParameterString(self.GRAPH_VERSION, self.tr('Graph version'),
                                                        default_graph_version, False, False))
 
+        default_valid_from = datetime.today().strftime(self.valid_timestamp_format)
+        self.addParameter(QgsProcessingParameterString(self.VALID_FROM, self.tr('Valid from'),
+                                                       default_valid_from, False, True))
+
+        self.addParameter(QgsProcessingParameterString(self.VALID_TO, self.tr('Valid to'),
+                                                       '', False, True))
+
         self.addParameter(QgsProcessingParameterEnum(self.IMPORT_FRCS, self.tr('Function Road Classes (FRCs)'),
                                                      self.frc_options, True, [1, 2, 3, 4, 5, 6, 7, 8, 9], False))
 
@@ -200,6 +211,24 @@ class Gip2GraphiumAlgorithm(QgsProcessingAlgorithm):
         self.addParameter(QgsProcessingParameterFile(self.OUTPUT_DIRECTORY, self.tr('Output directory'),
                                                      QgsProcessingParameterFile.Folder, optional=False))
 
+    def checkParameterValues(self, parameters, context):
+        ok, message = super(Gip2GraphiumAlgorithm, self).checkParameterValues(parameters, context)
+        if ok:
+            valid_from = self.parameterAsString(parameters, self.VALID_FROM, context)
+            if valid_from != '':
+                try:
+                    datetime.strptime(valid_from, self.valid_timestamp_format)
+                except ValueError:
+                    ok, message = False, 'Cannot parse valid_from (format ' + self.valid_timestamp_format + ')'
+            valid_to = self.parameterAsString(parameters, self.VALID_TO, context)
+            if valid_to != '':
+                try:
+                    datetime.strptime(valid_to, self.valid_timestamp_format)
+                except ValueError:
+                    ok, message = False, 'Cannot parse valid_to (format ' + self.valid_timestamp_format + ')'
+
+        return ok, message
+
     def processAlgorithm(self, parameters, context, feedback):
         # pass
         source_java = self.parameterAsFile(parameters, self.INPUT_JAVA, context)
@@ -208,6 +237,8 @@ class Gip2GraphiumAlgorithm(QgsProcessingAlgorithm):
         server_name = self.server_name_options[self.parameterAsInt(parameters, self.SERVER_NAME, context)]
         graph_name = self.parameterAsString(parameters, self.GRAPH_NAME, context)
         graph_version = self.parameterAsString(parameters, self.GRAPH_VERSION, context)
+        valid_from = self.parameterAsString(parameters, self.VALID_FROM, context)
+        valid_to = self.parameterAsString(parameters, self.VALID_TO, context)
         import_frcs_indexes = self.parameterAsEnums(parameters, self.IMPORT_FRCS, context)
         access_types_indexes = self.parameterAsEnums(parameters, self.ACCESS_TYPES, context)
         # skip_gip_import = self.parameterAsBoolean(parameters, self.SKIP_GIP_IMPORT, context)
@@ -241,6 +272,10 @@ class Gip2GraphiumAlgorithm(QgsProcessingAlgorithm):
         args = [source_java, '-jar', source_idf2graphium,
                 '-i', source, '-o', output_directory,
                 '-n', graph_name, '-v', graph_version]
+        if valid_from != '':
+            args.extend(['-vf', valid_from])
+        if valid_to != '':
+            args.extend(['-vt', valid_to])
         if len(import_frcs_indexes) > 0:
             args.extend(['--import-frcs', import_frcs])
         if len(access_types_indexes) > 0:

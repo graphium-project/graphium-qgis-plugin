@@ -73,8 +73,8 @@ class Gip2GraphiumAlgorithm(QgsProcessingAlgorithm):
         # self.PIXEL_CUT_MIN_FRC = 'PIXEL_CUT_MIN_FRC'
         # self.PIXEL_CUT_MAX_FRC = 'PIXEL_CUT_MAX_FRC'
         # self.PIXEL_CUT_ENABLE_SHORT_CONN = 'PIXEL_CUT_ENABLE_SHORT_CONN'
-        self.KEEP_DOWNLOADED_FILE = 'KEEP_DOWNLOADED_FILE'
-        self.FORCE_DOWNLOAD = 'FORCE_DOWNLOAD'
+        # self.KEEP_DOWNLOADED_FILE = 'KEEP_DOWNLOADED_FILE'
+        # self.FORCE_DOWNLOAD = 'FORCE_DOWNLOAD'
         self.KEEP_CONVERTED_FILE = 'KEEP_CONVERTED_FILE'
         self.OVERRIDE_IF_EXISTS = 'OVERRIDE_IF_EXISTS'
         self.OUTPUT_DIRECTORY = 'OUTPUT_DIRECTORY'
@@ -196,11 +196,11 @@ class Gip2GraphiumAlgorithm(QgsProcessingAlgorithm):
         # self.addParameter(QgsProcessingParameterBoolean(self.PIXEL_CUT_ENABLE_SHORT_CONN,
         #                                                 self.tr('Enable short connections at pixel cut'), True, True))
 
-        self.addParameter(QgsProcessingParameterBoolean(self.KEEP_DOWNLOADED_FILE, self.tr('Keep downloaded file'),
-                                                        True, True))
-
-        self.addParameter(QgsProcessingParameterBoolean(self.FORCE_DOWNLOAD, self.tr('Force download'),
-                                                        False, True))
+        # self.addParameter(QgsProcessingParameterBoolean(self.KEEP_DOWNLOADED_FILE, self.tr('Keep downloaded file'),
+        #                                                 True, True))
+        #
+        # self.addParameter(QgsProcessingParameterBoolean(self.FORCE_DOWNLOAD, self.tr('Force download'),
+        #                                                 False, True))
 
         self.addParameter(QgsProcessingParameterBoolean(self.KEEP_CONVERTED_FILE, self.tr('Keep converted file'),
                                                         True, True))
@@ -247,8 +247,8 @@ class Gip2GraphiumAlgorithm(QgsProcessingAlgorithm):
         # pixel_cut_min_frc = self.frc_option_values[self.parameterAsInt(parameters, self.PIXEL_CUT_MIN_FRC, context)]
         # pixel_cut_max_frc = self.frc_option_values[self.parameterAsInt(parameters, self.PIXEL_CUT_MAX_FRC, context)]
         # pixel_cut_enable_short_conn = self.parameterAsBoolean(parameters, self.PIXEL_CUT_ENABLE_SHORT_CONN, context)
-        keep_downloaded_file = self.parameterAsBoolean(parameters, self.KEEP_DOWNLOADED_FILE, context)
-        force_download = self.parameterAsBoolean(parameters, self.FORCE_DOWNLOAD, context)
+        # keep_downloaded_file = self.parameterAsBoolean(parameters, self.KEEP_DOWNLOADED_FILE, context)
+        # force_download = self.parameterAsBoolean(parameters, self.FORCE_DOWNLOAD, context)
         keep_converted_file = self.parameterAsBoolean(parameters, self.KEEP_CONVERTED_FILE, context)
         overrides_if_exists = self.parameterAsBoolean(parameters, self.OVERRIDE_IF_EXISTS, context)
         output_directory = self.parameterAsFileOutput(parameters, self.OUTPUT_DIRECTORY, context)
@@ -294,9 +294,9 @@ class Gip2GraphiumAlgorithm(QgsProcessingAlgorithm):
         # '--full-connectivity', 'false',
         # '	--xinfo-csv',
         # '	--downloadDir',
-        args.extend(['--keepDownloadFile', str(keep_downloaded_file),
-                     '--forceDownload', str(force_download),
-                     '--keepConvertedFile', str(keep_converted_file)])
+        # args.extend(['--keepDownloadFile', str(keep_downloaded_file),
+        #              '--forceDownload', str(force_download)])
+        args.extend(['--keepConvertedFile', str(keep_converted_file)])
         if selected_connection:
             url = selected_connection.get_connection_url() + "/segments/graphs/" + graph_name + "/versions/" +\
                   graph_version + "?overrideIfExists=" + str(overrides_if_exists)

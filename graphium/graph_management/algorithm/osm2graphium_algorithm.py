@@ -69,8 +69,8 @@ class Osm2GraphiumAlgorithm(QgsProcessingAlgorithm):
         self.USE_HIGHWAY_TYPES = 'USE_HIGHWAY_TYPES'
         self.HIGHWAY_TYPES = 'HIGHWAY_TYPES'
         self.TAGS = 'TAGS'
-        self.KEEP_DOWNLOADED_FILE = 'KEEP_DOWNLOADED_FILE'
-        self.FORCE_DOWNLOAD = 'FORCE_DOWNLOAD'
+        # self.KEEP_DOWNLOADED_FILE = 'KEEP_DOWNLOADED_FILE'
+        # self.FORCE_DOWNLOAD = 'FORCE_DOWNLOAD'
         self.KEEP_CONVERTED_FILE = 'KEEP_CONVERTED_FILE'
         self.OVERRIDE_IF_EXISTS = 'OVERRIDE_IF_EXISTS'
         self.OUTPUT_DIRECTORY = 'OUTPUT_DIRECTORY'
@@ -178,11 +178,11 @@ class Osm2GraphiumAlgorithm(QgsProcessingAlgorithm):
 
         self.addParameter(QgsProcessingParameterEnum(self.TAGS, self.tr('Tags'), self.tags_options, False, 0, True))
 
-        self.addParameter(QgsProcessingParameterBoolean(self.KEEP_DOWNLOADED_FILE, self.tr('Keep downloaded file'),
-                                                        True, True))
-
-        self.addParameter(QgsProcessingParameterBoolean(self.FORCE_DOWNLOAD, self.tr('Force download'),
-                                                        False, True))
+        # self.addParameter(QgsProcessingParameterBoolean(self.KEEP_DOWNLOADED_FILE, self.tr('Keep downloaded file'),
+        #                                                 True, True))
+        #
+        # self.addParameter(QgsProcessingParameterBoolean(self.FORCE_DOWNLOAD, self.tr('Force download'),
+        #                                                 False, True))
 
         self.addParameter(QgsProcessingParameterBoolean(self.KEEP_CONVERTED_FILE, self.tr('Keep converted file'),
                                                         True, True))
@@ -226,8 +226,8 @@ class Osm2GraphiumAlgorithm(QgsProcessingAlgorithm):
         use_highway_types = self.parameterAsBoolean(parameters, self.USE_HIGHWAY_TYPES, context)
         highway_type_indexes = self.parameterAsEnums(parameters, self.HIGHWAY_TYPES, context)
         tags = self.tags_options[self.parameterAsInt(parameters, self.TAGS, context)]
-        keep_downloaded_file = self.parameterAsBoolean(parameters, self.KEEP_DOWNLOADED_FILE, context)
-        force_download = self.parameterAsBoolean(parameters, self.FORCE_DOWNLOAD, context)
+        # keep_downloaded_file = self.parameterAsBoolean(parameters, self.KEEP_DOWNLOADED_FILE, context)
+        # force_download = self.parameterAsBoolean(parameters, self.FORCE_DOWNLOAD, context)
         keep_converted_file = self.parameterAsBoolean(parameters, self.KEEP_CONVERTED_FILE, context)
         overrides_if_exists = self.parameterAsBoolean(parameters, self.OVERRIDE_IF_EXISTS, context)
         output_directory = self.parameterAsFileOutput(parameters, self.OUTPUT_DIRECTORY, context)
@@ -259,9 +259,9 @@ class Osm2GraphiumAlgorithm(QgsProcessingAlgorithm):
         # '--valid-from', valid_from, '--valid-to', valid_to,
         args.extend(['--tags', tags])
         # '	--downloadDir',
-        args.extend(['--keepDownloadFile', str(keep_downloaded_file),
-                     '--forceDownload', str(force_download),
-                     '--keepConvertedFile', str(keep_converted_file)])
+        # args.extend(['--keepDownloadFile', str(keep_downloaded_file),
+        #              '--forceDownload', str(force_download)])
+        args.extend(['--keepConvertedFile', str(keep_converted_file)])
         if selected_connection:
             url = selected_connection.get_connection_url() + "/segments/graphs/" + graph_name + "/versions/" +\
                   graph_version + "?overrideIfExists=" + str(overrides_if_exists)

@@ -70,7 +70,7 @@ class GraphiumApi:
         """
 
         url_query = QUrl(url)
-        self.report_info(url_query.toString())
+        self.report_info('GET ' + url_query.toString())
 
         if url_query_items:
             url_query.setQuery(url_query_items)
@@ -89,7 +89,7 @@ class GraphiumApi:
         """
 
         url_query = QUrl(url)
-        self.report_info(url_query.toString())
+        self.report_info('POST ' + url_query.toString())
 
         if url_query_items:
             url_query.setQuery(url_query_items)
@@ -112,7 +112,7 @@ class GraphiumApi:
         :return: response or error message in json format
         """
 
-        self.report_info(url)
+        self.report_info('PUT ' + url)
 
         try:
             response = requests.put(url)
@@ -149,7 +149,7 @@ class GraphiumApi:
         """
 
         url_query = QUrl(url)
-        self.report_info(url_query.toString())
+        self.report_info('PUT ' + url_query.toString())
 
         data_byte_array = QJsonDocument.fromVariant(data)
 
@@ -168,8 +168,7 @@ class GraphiumApi:
         :param url: url for request
         :return: response or error message in json format
         """
-
-        self.report_info(url)
+        self.report_info('DELETE ' + url)
 
         try:
             response = requests.delete(url)
@@ -208,7 +207,7 @@ class GraphiumApi:
         """
 
         url_query = QUrl(url)
-        self.report_info(url_query.toString())
+        self.report_info('DELETE ' + url_query.toString())
 
         request = QNetworkRequest(url_query)
         loop = QEventLoop()

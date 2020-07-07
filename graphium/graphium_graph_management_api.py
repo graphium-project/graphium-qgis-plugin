@@ -100,7 +100,7 @@ class GraphiumGraphManagementApi(GraphiumApi):
         url = self.connection.get_connection_url() + '/' + ('hdwaysegments' if is_hd_segments else 'segments') + \
             '/graphs/' + graph_name + '/versions/' + graph_version
 
-        self.report_info(url)
+        self.report_info('POST ' + url)
 
         params = {"overrideIfExists": override_if_exists}
 

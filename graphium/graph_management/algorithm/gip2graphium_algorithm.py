@@ -144,15 +144,16 @@ class Gip2GraphiumAlgorithm(QgsProcessingAlgorithm):
 
         # read server connections and prepare enum items
         self.server_name_options.clear()
+        self.server_name_options.append("[Do not import the converted file to the server]")
         selected_graph_server = Settings.get_selected_graph_server()
         selected_index = 0
         for index, connection in enumerate(self.connection_manager.read_connections()):
             self.server_name_options.append(connection.name)
             if selected_index == 0 and isinstance(selected_graph_server, str)\
                     and connection.name == selected_graph_server:
-                selected_index = index
+                selected_index = index + 1
         self.addParameter(QgsProcessingParameterEnum(self.SERVER_NAME, self.tr('Server name'),
-                                                     self.server_name_options, False, selected_index, True))
+                                                     self.server_name_options, False, selected_index, False))
 
         s = Settings.get_selected_graph_name()
         default_graph_name = ''

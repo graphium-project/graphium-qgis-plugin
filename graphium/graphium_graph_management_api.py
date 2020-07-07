@@ -100,6 +100,8 @@ class GraphiumGraphManagementApi(GraphiumApi):
         url = self.connection.get_connection_url() + '/' + ('hdwaysegments' if is_hd_segments else 'segments') + \
             '/graphs/' + graph_name + '/versions/' + graph_version
 
+        self.report_info(url)
+
         params = {"overrideIfExists": override_if_exists}
 
         try:
@@ -115,8 +117,12 @@ class GraphiumGraphManagementApi(GraphiumApi):
 
         if response.status_code == 404:
             return {"error": {"msg": "ContentNotFoundError"}}
-        if response.status_code != 200:
-            return {"error": {"msg": response.reason}}  # + " -- " + response.text}}
+        elif response.status_code == 500:
+            response_json = response.json()
+            return {"error": {"msg": response_json['exception'] + ' - ' + response_json['message']}}
+        elif response.status_code != 200:
+            response_json = response.json()
+            return {"error": {"msg": response_json['exception'] + ' - ' + response_json['message']}}
         else:
             try:
                 return response.json()

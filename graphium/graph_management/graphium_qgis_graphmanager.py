@@ -27,8 +27,8 @@ import os.path
 from datetime import datetime
 import threading
 # PyQt imports
-from PyQt5.QtCore import QTranslator, QCoreApplication, Qt
-from PyQt5 import QtWidgets
+from qgis.PyQt.QtCore import (QTranslator, QCoreApplication, Qt)
+from qgis.PyQt.QtWidgets import (QMenu, QMessageBox)
 # qgis imports
 from qgis.core import Qgis, QgsProcessingException
 from qgis import processing
@@ -100,8 +100,14 @@ class GraphiumQGISGraphManager:
         self.dlg.btnHideGraphVersions.clicked.connect(self.switch_to_graph_name_view)
         self.dlg.btnRefreshGraphVersions.clicked.connect(self.switch_to_graph_version_view)
         self.dlg.btnSetDefaultGraphVersion.clicked.connect(self.set_default_graph_version)
-        self.dlg.btnAddGraphName.clicked.connect(self.add_graph_version)
-        self.dlg.btnAddGraphVersion.clicked.connect(self.add_graph_version)
+
+        add_graph_name_menu = QMenu()
+        add_graph_name_menu.addAction('Add ...', self.add_graph_version)
+        add_graph_name_menu.addAction('Add from OSM', self.add_graph_version_from_osm)
+        add_graph_name_menu.addAction('Add from GIP', self.add_graph_version_from_gip)
+        self.dlg.btnAddGraphName.setMenu(add_graph_name_menu)
+        self.dlg.btnAddGraphVersion.setMenu(add_graph_name_menu)
+
         self.dlg.btnActivateGraphVersion.clicked.connect(self.activate_graph_version)
         self.dlg.btnDownloadGraphVersion.clicked.connect(self.download_graph_version_to_map)
         self.dlg.btnDeleteGraphVersion.clicked.connect(self.remove_graph_version)
@@ -172,10 +178,9 @@ class GraphiumQGISGraphManager:
         self.read_connections(selected_connection_index)
 
     def remove_connection(self):
-        reply = QtWidgets.QMessageBox.question(self.dlg, 'Graphium',
-                                               'Do you really want to REMOVE the selected connection?',
-                                               QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
-        if reply == QtWidgets.QMessageBox.Yes:
+        reply = QMessageBox.question(self.dlg, 'Graphium', 'Do you really want to REMOVE the selected connection?',
+                                               QMessageBox.Yes, QMessageBox.No)
+        if reply == QMessageBox.Yes:
             selected_connection_index = self.dlg.cboConnections.currentIndex()
             del self.connection_manager.connections[selected_connection_index]
             self.connection_manager.save_connections()
@@ -381,6 +386,42 @@ class GraphiumQGISGraphManager:
         # update ui
         self.switch_to_graph_version_view()
 
+    def add_graph_version_from_osm(self):
+        """
+        Opens an algorithm dialog to add a new graph version from a GIP data source
+        """
+        graph_name, graph_version = self.get_selected_graph_name_and_version(False)
+
+        parameters = {
+            AddGraphVersionAlgorithm.SERVER_NAME: self.dlg.cboConnections.currentIndex() + 1,
+            AddGraphVersionAlgorithm.GRAPH_NAME: graph_name if graph_name else '',
+            AddGraphVersionAlgorithm.GRAPH_VERSION: graph_version['version'] if graph_version else '',
+            AddGraphVersionAlgorithm.OVERRIDE_IF_EXISTS: True
+        }
+
+        processing.execAlgorithmDialog("Graphium:osm2graphiumconverter", parameters)
+
+        # update ui
+        self.switch_to_graph_version_view()
+
+    def add_graph_version_from_gip(self):
+        """
+        Opens an algorithm dialog to add a new graph version from a GIP data source
+        """
+        graph_name, graph_version = self.get_selected_graph_name_and_version(False)
+
+        parameters = {
+            AddGraphVersionAlgorithm.SERVER_NAME: self.dlg.cboConnections.currentIndex() + 1,
+            AddGraphVersionAlgorithm.GRAPH_NAME: graph_name if graph_name else '',
+            AddGraphVersionAlgorithm.GRAPH_VERSION: graph_version['version'] if graph_version else '',
+            AddGraphVersionAlgorithm.OVERRIDE_IF_EXISTS: True
+        }
+
+        processing.execAlgorithmDialog("Graphium:gip2graphiumconverter", parameters)
+
+        # update ui
+        self.switch_to_graph_version_view()
+
     def remove_graph_version(self):
         """
         Calls an algorithm to delete the selected graph version
@@ -391,10 +432,10 @@ class GraphiumQGISGraphManager:
             return
 
         if graph_version['state'] != 'DELETED':
-            reply = QtWidgets.QMessageBox.question(self.dlg, 'Graphium',
+            reply = QMessageBox.question(self.dlg, 'Graphium',
                                                    'Do you really want to REMOVE the selected graph version?',
-                                                   QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
-            if reply == QtWidgets.QMessageBox.Yes:
+                                                   QMessageBox.Yes, QMessageBox.No)
+            if reply == QMessageBox.Yes:
                 parameters = {
                     RemoveGraphVersionAlgorithm.SERVER_NAME: self.dlg.cboConnections.currentIndex(),
                     RemoveGraphVersionAlgorithm.GRAPH_NAME: graph_name,
@@ -424,11 +465,11 @@ class GraphiumQGISGraphManager:
             return
 
         if graph_version['state'] == 'INITIAL':
-            reply = QtWidgets.QMessageBox.question(self.dlg,
+            reply = QMessageBox.question(self.dlg,
                                                    'Graphium',
                                                    'Do you really want to ACTIVATE the selected graph version?',
-                                                   QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
-            if reply == QtWidgets.QMessageBox.Yes:
+                                                   QMessageBox.Yes, QMessageBox.No)
+            if reply == QMessageBox.Yes:
                 parameters = {
                         ActivateGraphVersionAlgorithm.SERVER_NAME: self.dlg.cboConnections.currentIndex(),
                         ActivateGraphVersionAlgorithm.GRAPH_NAME: graph_name,

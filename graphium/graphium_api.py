@@ -28,9 +28,8 @@ import urllib.error
 import urllib.parse
 import json
 import requests
-import time
 # PyQt imports
-from qgis.PyQt.QtCore import (QUrl, QSettings)
+from qgis.PyQt.QtCore import (QUrl, QSettings, QEventLoop)
 from qgis.PyQt.QtNetwork import (QNetworkRequest, QNetworkReply)
 from qgis.PyQt.QtCore import (QJsonDocument)
 # qgis imports
@@ -52,17 +51,20 @@ class GraphiumApi:
 
     def __init__(self, feedback=None):
         self.network_access_manager = QgsNetworkAccessManager.instance()
+        self.network_access_manager.downloadProgress.connect(self.download_progress)
         self.connection = None
         self.feedback = feedback
 
-        self.timeout_sec = int(QSettings().value('plugin-graphium/timeout_sec', -1))
-        if self.timeout_sec == -1:
+        timeout_sec = int(QSettings().value('plugin-graphium/timeout_sec', -1))
+        if timeout_sec == -1:
             QSettings().setValue("plugin-graphium/timeout_sec", 60*10)
-        self.timeout_sec = int(QSettings().value('plugin-graphium/timeout_sec', 60*10))
+        timeout_sec = int(QSettings().value('plugin-graphium/timeout_sec', 60*10))
+        self.network_access_manager.setTimeout(timeout_sec * 1000)
 
     def process_get_call(self, url, url_query_items):
         """
-        :param url:
+        Run a GET request and return reply data
+        :param url: url for request
         :param url_query_items:
         :return: response or error message in json format
         """
@@ -74,14 +76,13 @@ class GraphiumApi:
             url_query.setQuery(url_query_items)
 
         request = QNetworkRequest(url_query)
-        self.network_access_manager.setTimeout(self.timeout_sec * 1000)
-        # network_access_manager.downloadProgress.connect(self.download_progress)
         reply = self.network_access_manager.blockingGet(request, '', True, self.feedback)
         return self.process_qgs_reply(reply)
 
     def process_post_call(self, url, url_query_items, data):
         """
-        :param url:
+        Run a POST request and return reply data
+        :param url: url for request
         :param url_query_items:
         :param data:
         :return: response or error message in json format
@@ -99,13 +100,17 @@ class GraphiumApi:
 
         request = QNetworkRequest(url_query)
         request.setHeader(QNetworkRequest.ContentTypeHeader, "application/json")
-        self.network_access_manager.setTimeout(self.timeout_sec * 1000)
-        # network_access_manager.uploadProgress.connect(self.update_progress)
-        # network_access_manager.downloadProgress.connect(self.download_progress)
         reply = self.network_access_manager.blockingPost(request, data_byte_array.toJson(), '', True, self.feedback)
         return self.process_qgs_reply(reply)
 
-    def process_put_call(self, url, data=None):
+    def process_put_call_using_requests(self, url, data=None):
+        """
+        Deprecated
+        Run a PUT request and return reply data
+        :param url: url for request
+        :param data:
+        :return: response or error message in json format
+        """
 
         self.report_info(url)
 
@@ -135,11 +140,12 @@ class GraphiumApi:
                 self.report_error("JSON: %s" % str(response.text), True)
                 return {"error": {"msg": "JSON Decode Error"}}
 
-    def process_put_call_new(self, url, data=None):
+    def process_put_call(self, url, data=None):
         """
-        :param url:
+        Run a PUT request and return reply data
+        :param url: url for request
         :param data:
-        :return: reply object
+        :return: response or error message in json format
         """
 
         url_query = QUrl(url)
@@ -148,18 +154,21 @@ class GraphiumApi:
         data_byte_array = QJsonDocument.fromVariant(data)
 
         request = QNetworkRequest(url_query)
-        # network_access_manager.uploadProgress.connect(self.update_progress)
-        self.network_access_manager.finished.connect(self.process_q_reply)
-        self.reply_content = None
+        loop = QEventLoop()  # https://stackoverflow.com/a/46514984
         reply = self.network_access_manager.put(request, data_byte_array.toJson())
+        reply.finished.connect(loop.quit)
+        loop.exec_()
 
-        while self.reply_content is None:
-            time.sleep(1)
-            pass
+        return self.process_q_reply(reply)
 
-        return self.reply_content
+    def process_delete_call_using_requests(self, url):
+        """
+        Deprecated
+        Run a DELETE request and return reply data
+        :param url: url for request
+        :return: response or error message in json format
+        """
 
-    def process_delete_call(self, url):
         self.report_info(url)
 
         try:
@@ -191,19 +200,21 @@ class GraphiumApi:
             else:
                 return {"error": {"msg": "No error but empty response"}}
 
-    def process_delete_call_new(self, url):
+    def process_delete_call(self, url):
         """
-        :param url:
-        :return: reply object
+        Run a DELETE request and return reply data
+        :param url: url for request
+        :return: response or error message in json format
         """
 
         url_query = QUrl(url)
         self.report_info(url_query.toString())
 
         request = QNetworkRequest(url_query)
-        self.network_access_manager.downloadProgress.connect(self.update_progress)
-        # network_access_manager.finished.connect(self.process_q_reply)
+        loop = QEventLoop()
         reply = self.network_access_manager.deleteResource(request)
+        reply.finished.connect(loop.quit)
+        loop.exec_()
 
         return self.process_q_reply(reply)
 
@@ -211,13 +222,14 @@ class GraphiumApi:
         if self.feedback:
             self.feedback.setProgress(int(sent * total))
 
-    def download_progress(self, received, total):
-        if self.feedback:
+    def download_progress(self, request_id, received, total):
+        if self.feedback and total != -1:
             self.feedback.setProgress(int(received * total))
 
     def process_q_reply(self, reply):
-        self.reply_content = self.process_reply(reply, reply.readAll())
-        return self.reply_content
+        reply_content = self.process_reply(reply, reply.readAll())
+        reply.deleteLater()
+        return reply_content
 
     def process_qgs_reply(self, reply):
         return self.process_reply(reply, reply.content())
@@ -247,6 +259,8 @@ class GraphiumApi:
                 return data
         elif reply.error() == QNetworkReply.ContentNotFoundError:
             return {"error": {"msg": 'ContentNotFoundError'}}
+        elif reply.error() == QNetworkReply.InternalServerError:
+            return {"error": {"msg": 'InternalServerError'}}
         else:
             return {"error": {"msg": reply.errorString()}}
 

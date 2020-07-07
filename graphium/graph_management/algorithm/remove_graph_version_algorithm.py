@@ -47,7 +47,7 @@ class RemoveGraphVersionAlgorithm(QgsProcessingAlgorithm):
     GRAPH_NAME = 'GRAPH_NAME'
     GRAPH_VERSION = 'GRAPH_VERSION'
     KEEP_METADATA = 'KEEP_METADATA'
-    OUTPUT_RESULT = 'OUTPUT_STATE'
+    OUTPUT_STATE = 'OUTPUT_STATE'
 
     def __init__(self):
         super().__init__()
@@ -129,7 +129,7 @@ class RemoveGraphVersionAlgorithm(QgsProcessingAlgorithm):
         self.addParameter(QgsProcessingParameterBoolean(self.KEEP_METADATA, self.tr('Keep metadata'),
                                                         True, True))
 
-        self.addOutput(QgsProcessingOutputString(self.OUTPUT_RESULT, self.tr('State')))
+        self.addOutput(QgsProcessingOutputString(self.OUTPUT_STATE, self.tr('State')))
 
     def processAlgorithm(self, parameters, context, feedback):
 
@@ -159,4 +159,12 @@ class RemoveGraphVersionAlgorithm(QgsProcessingAlgorithm):
 
         feedback.setProgress(100)
 
-        return {self.OUTPUT_RESULT: str(response)}
+        if 'state' in response:
+            return {self.OUTPUT_STATE: response['state']}
+        elif 'error' in response:
+            if 'msg' in response['error']:
+                feedback.reportError(response['error']['msg'], True)
+            return {self.OUTPUT_STATE: None}
+        else:
+            feedback.reportError('Unknown error', True)
+            return {self.OUTPUT_STATE: None}

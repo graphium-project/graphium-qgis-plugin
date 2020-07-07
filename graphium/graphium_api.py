@@ -42,8 +42,8 @@ from requests import Timeout
 class GraphiumApi:
     """
     sources:
-     - https://qgis.org/pyqgis/3.12/core/QgsNetworkAccessManager.html
-     - https://qgis.org/pyqgis/3.12/core/QgsNetworkReplyContent.html
+     - https://qgis.org/pyqgis/master/core/QgsNetworkAccessManager.html
+     - https://qgis.org/pyqgis/master/core/QgsNetworkReplyContent.html
      - https://doc.qt.io/qt-5/qnetworkaccessmanager.html
      - https://doc.qt.io/qt-5/qnetworkrequest.html
      - https://doc.qt.io/qt-5/qnetworkreply.html
@@ -76,7 +76,7 @@ class GraphiumApi:
         request = QNetworkRequest(url_query)
         self.network_access_manager.setTimeout(self.timeout_sec * 1000)
         # network_access_manager.downloadProgress.connect(self.download_progress)
-        reply = self.network_access_manager.blockingGet(request, '', True)  # , self.feedback)
+        reply = self.network_access_manager.blockingGet(request, '', True, self.feedback)
         return self.process_qgs_reply(reply)
 
     def process_post_call(self, url, url_query_items, data):
@@ -102,7 +102,7 @@ class GraphiumApi:
         self.network_access_manager.setTimeout(self.timeout_sec * 1000)
         # network_access_manager.uploadProgress.connect(self.update_progress)
         # network_access_manager.downloadProgress.connect(self.download_progress)
-        reply = self.network_access_manager.blockingPost(request, data_byte_array.toJson(), '', True)  # , self.feedback)
+        reply = self.network_access_manager.blockingPost(request, data_byte_array.toJson(), '', True, self.feedback)
         return self.process_qgs_reply(reply)
 
     def process_put_call(self, url, data=None):

@@ -184,10 +184,3 @@ class GraphiumGraphManagementApi(GraphiumApi):
         url = self.connection.get_connection_url() + \
             '/changes/graphs/' + graph_name + '/from/' + graph_version_a + '/to/' + graph_version_b
         return self.process_get_call(url, None)
-
-    def export_graph(self, graph_name, graph_version):
-        if self.connection is None:
-            return []
-
-        url = self.connection.get_connection_url() + '/segments/graphs/' + graph_name + '/versions/' + graph_version
-        return self.process_get_call(url, None)

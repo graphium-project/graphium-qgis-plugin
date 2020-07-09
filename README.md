@@ -4,13 +4,16 @@ This is a QGIS extension for the road network management tool Graphium.
 
 Features of this plugin include:
 
-- Connect to Graphium servers
+- Manage connections to Graphium servers
 - Graph management, e.g add, activate, download or remove graph versions
-- Create graphs from OpenStreetMap or GIP.at (for Austrian datasets)
+- Create graphs from OpenStreetMap or GIP.at datasets
 - Utilities like map-matching or routing
+- Use of the QGIS processing framework for all Graphium tasks
 
-The installation instructions and descriptions of all features and algorithms are available in the project wiki.
+Detailed installation instructions and descriptions of all features and algorithms are available in the project wiki.
 
-The ZIP file containing the plugin is available in the releases section here.   
+The latest release of the plugin (ZIP file) is available on the
+[releases](https://github.com/graphium-project/graphium-qgis-plugin/releases) page
+of this repository. Use the QGIS Plugins dialog to install the plugin ("Install from ZIP").
 
 ![Graph Manager](screenshots/graph_manager_1.png "Graph Manager")

@@ -54,7 +54,7 @@ class DownloadGraphVersionAlgorithm(QgsProcessingAlgorithm):
     OUTPUT_SEGMENTS = 'OUTPUT_SEGMENTS'
     OUTPUT_JSON = 'OUTPUT_JSON'
 
-    plugin_path = os.path.split(os.path.split(os.path.dirname(__file__))[0])[0]
+    plugin_path = os.path.split(os.path.split(os.path.split(os.path.dirname(__file__))[0])[0])[0]
 
     def __init__(self):
         super().__init__()

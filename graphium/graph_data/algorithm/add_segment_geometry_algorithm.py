@@ -44,7 +44,7 @@ class AddSegmentGeometryAlgorithm(QgsProcessingAlgorithm):
     with its features (attribute only table).
     """
 
-    plugin_path = os.path.split(os.path.split(os.path.dirname(__file__))[0])[0]
+    plugin_path = os.path.split(os.path.split(os.path.split(os.path.dirname(__file__))[0])[0])[0]
 
     INPUT = 'INPUT'
     FIELD_SEGMENT_ID = 'FIELD_SEGMENT_ID'

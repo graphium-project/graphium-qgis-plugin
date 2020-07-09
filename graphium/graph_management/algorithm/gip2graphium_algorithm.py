@@ -26,10 +26,10 @@
 import os
 from datetime import datetime
 import subprocess
-# PyQt5 imports
-from PyQt5.QtCore import QSettings
+# PyQt imports
+from qgis.PyQt.QtCore import (QCoreApplication, QSettings)
+from qgis.PyQt.QtGui import (QIcon)
 # qgis imports
-from qgis.PyQt.QtCore import QCoreApplication
 from qgis.core import (QgsProcessingParameterFile, QgsProcessingParameterBoolean, QgsProcessingAlgorithm,
                        QgsProcessingParameterString, QgsProcessingParameterEnum)
 # plugin imports
@@ -44,7 +44,7 @@ class Gip2GraphiumAlgorithm(QgsProcessingAlgorithm):
     This algorithm is used to convert a GIP.at graph file into Graphium JSON format.
     """
 
-    plugin_path = os.path.split(os.path.split(os.path.dirname(__file__))[0])[0]
+    plugin_path = os.path.split(os.path.split(os.path.split(os.path.dirname(__file__))[0])[0])[0]
 
     def __init__(self):
         super().__init__()
@@ -112,6 +112,9 @@ class Gip2GraphiumAlgorithm(QgsProcessingAlgorithm):
 
     def shortHelpString(self):
         return self.tr('This algorithm is used to convert a GIP.at graph file into Graphium JSON format.')
+
+    def icon(self):
+        return QIcon(os.path.join(self.plugin_path, 'icons/icon.svg'))
 
     def tr(self, string):
         """

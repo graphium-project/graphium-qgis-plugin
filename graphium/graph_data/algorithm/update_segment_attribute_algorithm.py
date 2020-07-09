@@ -39,7 +39,7 @@ from ....graphium.settings import Settings
 
 class UpdateSegmentAttributeAlgorithm(QgsProcessingFeatureBasedAlgorithm):
 
-    plugin_path = os.path.split(os.path.split(os.path.dirname(__file__))[0])[0]
+    plugin_path = os.path.split(os.path.split(os.path.split(os.path.dirname(__file__))[0])[0])[0]
 
     SERVER_NAME = 'SERVER_NAME'
     GRAPH_NAME = 'GRAPH_NAME'

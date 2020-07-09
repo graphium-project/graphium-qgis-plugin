@@ -41,7 +41,7 @@ class AddGraphVersionAlgorithm(QgsProcessingAlgorithm):
     This algorithm imports a new graph version to the Graphium server.
     """
 
-    plugin_path = os.path.split(os.path.split(os.path.dirname(__file__))[0])[0]
+    plugin_path = os.path.split(os.path.split(os.path.split(os.path.dirname(__file__))[0])[0])[0]
 
     SOURCE_FILE = 'SOURCE_FILE'
     SERVER_NAME = 'SERVER_NAME'

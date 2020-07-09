@@ -28,6 +28,7 @@ import json
 from datetime import datetime, timezone
 # PyQt imports
 from qgis.PyQt.QtCore import QCoreApplication
+from qgis.PyQt.QtGui import (QIcon)
 # qgis imports
 from qgis.core import (QgsProcessingParameterFile, QgsProcessingParameterFileDestination, QgsProcessingAlgorithm,
                        QgsProcessingOutputNumber)
@@ -40,7 +41,7 @@ class TrackGpx2JsonAlgorithm(QgsProcessingAlgorithm):
     This algorithm is used to convert a trajectory GPX file into Graphium JSON format.
     """
 
-    plugin_path = os.path.split(os.path.split(os.path.dirname(__file__))[0])[0]
+    plugin_path = os.path.split(os.path.split(os.path.split(os.path.dirname(__file__))[0])[0])[0]
 
     def __init__(self):
         super().__init__()
@@ -81,6 +82,9 @@ class TrackGpx2JsonAlgorithm(QgsProcessingAlgorithm):
 
     def shortHelpString(self):
         return self.tr('This algorithm is used to convert a trajectory GPX file into Graphium JSON format.')
+
+    def icon(self):
+        return QIcon(os.path.join(self.plugin_path, 'icons/icon.svg'))
 
     def tr(self, string):
         """

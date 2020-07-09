@@ -24,10 +24,10 @@
 """
 
 import os
-# PyQt5 imports
-from PyQt5.QtGui import (QIcon)
-# qgis imports
+# PyQt imports
 from qgis.PyQt.QtCore import QCoreApplication
+from qgis.PyQt.QtGui import (QIcon)
+# qgis imports
 from qgis.core import (QgsProcessingAlgorithm, QgsProcessingParameterEnum, QgsProcessingParameterString,
                        QgsProcessingOutputString)
 # plugin
@@ -41,7 +41,7 @@ class ActivateGraphVersionAlgorithm(QgsProcessingAlgorithm):
     This algorithm activates a graph version.
     """
 
-    plugin_path = os.path.split(os.path.split(os.path.dirname(__file__))[0])[0]
+    plugin_path = os.path.split(os.path.split(os.path.split(os.path.dirname(__file__))[0])[0])[0]
 
     SERVER_NAME = 'SERVER_NAME'
     GRAPH_NAME = 'GRAPH_NAME'

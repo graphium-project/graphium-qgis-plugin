@@ -27,6 +27,7 @@ import os
 import json
 # PyQt5 imports
 from PyQt5.QtCore import (QVariant)
+from PyQt5.QtGui import (QIcon)
 # qgis imports
 from qgis import processing
 from qgis.PyQt.QtCore import QCoreApplication
@@ -46,7 +47,7 @@ class MapMatcherAlgorithm(QgsProcessingAlgorithm):
     This algorithm is used to link trajectories to the road network.
     """
 
-    plugin_path = os.path.split(os.path.split(os.path.dirname(__file__))[0])[0]
+    plugin_path = os.path.split(os.path.split(os.path.split(os.path.dirname(__file__))[0])[0])[0]
 
     def __init__(self):
         super().__init__()
@@ -94,8 +95,8 @@ class MapMatcherAlgorithm(QgsProcessingAlgorithm):
     def shortHelpString(self):
         return self.tr('This algorithm is used to link trajectories to the road network.')
 
-    # def icon(self):
-    #     return QIcon(os.path.join(self.plugin_path, 'icons/icon_map_matcher.svg'))
+    def icon(self):
+        return QIcon(os.path.join(self.plugin_path, 'icons/icon_map_matcher.svg'))
 
     def tr(self, string):
         """

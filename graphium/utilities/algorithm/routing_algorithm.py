@@ -27,6 +27,7 @@ import os
 from datetime import datetime
 # PyQt5 imports
 from PyQt5.QtCore import QVariant
+from PyQt5.QtGui import (QIcon)
 # qgis imports
 from qgis.PyQt.QtCore import QCoreApplication
 from qgis.core import (QgsProcessingParameterEnum, QgsProcessingParameterString,
@@ -45,7 +46,7 @@ class RoutingAlgorithm(QgsProcessingAlgorithm):
     This algorithm finds the fastest or shortest route between two coordinates.
     """
 
-    plugin_path = os.path.split(os.path.split(os.path.dirname(__file__))[0])[0]
+    plugin_path = os.path.split(os.path.split(os.path.split(os.path.dirname(__file__))[0])[0])[0]
 
     def __init__(self):
         super().__init__()
@@ -97,12 +98,8 @@ class RoutingAlgorithm(QgsProcessingAlgorithm):
                        '(2) manually according to format "lon,lat [coordinate reference system]" '
                        '(e.g. 13.0,47.8 [EPSG:4326])')
 
-    # def icon(self):
-    #     # print(self.plugin_path)
-    #     # print(os.path.join(self.plugin_path, 'icons/icon_routing.svg'))
-    #     # print(os.path.join(os.path.dirname(__file__), '..\\..\\..', 'icons',  'icon_routing.svg'))
-    #     # return QIcon(os.path.join(self.plugin_path, 'icons/icon_routing.svg'))
-    #     return QIcon(os.path.join(os.path.dirname(__file__), '../../..', 'icons',  'icon_routing.svg'))
+    def icon(self):
+        return QIcon(os.path.join(self.plugin_path, 'icons/icon_routing.svg'))
 
     def tr(self, string):
         """

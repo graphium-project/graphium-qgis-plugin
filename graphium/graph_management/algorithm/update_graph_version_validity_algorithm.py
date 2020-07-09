@@ -138,6 +138,21 @@ class UpdateGraphVersionValidityAlgorithm(QgsProcessingAlgorithm):
 
         self.addOutput(QgsProcessingOutputString(self.OUTPUT_NEW_VALUE, self.tr('State')))
 
+    def checkParameterValues(self, parameters, context):
+        ok, message = super(UpdateGraphVersionValidityAlgorithm, self).checkParameterValues(parameters, context)
+        if ok:
+            new_value = self.parameterAsString(parameters, self.NEW_VALUE, context)
+            if new_value != '':
+                try:
+                    datetime.strptime(new_value + '+0000', self.date_read_format)
+                except ValueError:
+                    try:
+                        datetime.strptime(new_value, self.date_read_format)
+                    except ValueError:
+                        ok, message = False, 'Cannot parse new date (format ' + self.date_read_format + ')'
+
+        return ok, message
+
     def processAlgorithm(self, parameters, context, feedback):
 
         feedback.setProgress(0)
@@ -153,10 +168,10 @@ class UpdateGraphVersionValidityAlgorithm(QgsProcessingAlgorithm):
 
         try:
             new_value_str = str(datetime.strptime(new_value + '+0000', self.date_read_format).timestamp() * 1000)
-        except ValueError as e:
+        except ValueError:
             try:
                 new_value_str = str(datetime.strptime(new_value, self.date_read_format).timestamp() * 1000)
-            except ValueError as e:
+            except ValueError:
                 raise QgsProcessingException("Cannot parse date (format should be " + self.date_read_format + ")")
 
         feedback.pushInfo("Connect to Graphium server '" + server_name + "' ...")

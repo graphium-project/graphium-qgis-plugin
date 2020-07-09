@@ -1,11 +1,28 @@
-v0.7 (2020-07-01)
+v1.0 (2020-07-08)
+
+ * [Feature] New algorithm UpdateGraphVersionValidity
+ * [Feature] Add valid_from and valid_to parameters to gip2graphium  and osm2graphium algorithms
+ * [Improvement] Menu button to launch all AddGraphVersion algorithms (add/gip/osm) in manager
+ * [Improvement] Add request type to url in feedback in api
+ * [Improvement] QgsNetworkAccessManager, timeout and downloadProgress for all requests (including PUT/DELETE) in api
+ * [Improvement] Simplify output of remove_graph_version_algorithm to state only
+ * [Improvement] Graphium icons for all algorithms
+ * [Improvement] Use checkParameterValues to check new date in UpdateGraphVersionValidityAlgorithm
+ * [Fixed] Provide useful error feedback at AddGraphVersion algorithm
+ * [Fixed] Better message in case of decode error at osm2graphium/gip2graphium
+ * [Fixed] Allow aborting GET and POST requests
+ * [Fixed] Select correct server at gip2graphium algorithm if set via parameter
+ * [Fixed] Never use processing.QgisAlgorithm to improve stability
+ * [Fixed] Disable unused keepDownloadFile and forceDownload parameters in gip2graphium and osm2graphium algorithms
 
 v0.7 (2020-07-01)
+
  * [Feature] Add refresh buttons for graph name and version tables
  * [Improvement] Mention selected server above graph name table
  * [Improvement] Disable graph management group until successfully connecting to server in manager
  * [Improvement] Graph name/version set as default is displayed with bold font in table in manager
  * [Fixed] Show number of graph versions for each graph name without delay in manager
+ * [Fixed] Clear graph name table if connecting to server fails in manager
  * [Fixed] Do not automatically add /api to url
  * Temporarily hide is_hd_segments parameter at add graph version algorithm
 

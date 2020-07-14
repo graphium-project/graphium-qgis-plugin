@@ -257,9 +257,9 @@ class GraphiumApi:
                 data = reply_content.data().decode('utf8')
                 return data
         elif reply.error() == QNetworkReply.ContentNotFoundError:
-            return {"error": {"msg": 'ContentNotFoundError'}}
+            return {"error": {"msg": '404 ContentNotFoundError'}}
         elif reply.error() == QNetworkReply.InternalServerError:
-            return {"error": {"msg": 'InternalServerError'}}
+            return {"error": {"msg": '500 InternalServerError - ' + reply.errorString()}}
         else:
             return {"error": {"msg": reply.errorString()}}
 

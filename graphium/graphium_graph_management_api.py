@@ -116,13 +116,14 @@ class GraphiumGraphManagementApi(GraphiumApi):
             return None
 
         if response.status_code == 404:
-            return {"error": {"msg": "ContentNotFoundError"}}
+            return {"error": {"msg": "404 ContentNotFoundError"}}
         elif response.status_code == 500:
             response_json = response.json()
-            return {"error": {"msg": response_json['exception'] + ' - ' + response_json['message']}}
+            return {"error": {"msg": '500 ' + response_json['exception'] + ' - ' + response_json['message']}}
         elif response.status_code != 200:
             response_json = response.json()
-            return {"error": {"msg": response_json['exception'] + ' - ' + response_json['message']}}
+            return {"error": {"msg": str(response.status_code) + ' ' + response_json['exception'] + ' - ' +
+                                     response_json['message']}}
         else:
             try:
                 return response.json()

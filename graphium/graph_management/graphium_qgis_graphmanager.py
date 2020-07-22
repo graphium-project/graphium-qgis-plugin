@@ -124,8 +124,6 @@ class GraphiumQGISGraphManager:
         self.dlg.lblDefaultGraphName.setTextInteractionFlags(Qt.TextSelectableByMouse)
         self.dlg.lblDefaultGraphVersion.setTextInteractionFlags(Qt.TextSelectableByMouse)
 
-        self.graph_file_default_dir = Settings.get_graph_file_default_dir()
-
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
         """Get the translation for a string using Qt translation API.

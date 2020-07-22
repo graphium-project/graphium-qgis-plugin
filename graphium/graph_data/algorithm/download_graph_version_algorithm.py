@@ -144,7 +144,7 @@ class DownloadGraphVersionAlgorithm(QgsProcessingAlgorithm):
         self.addOutput(QgsProcessingOutputNumber(self.OUTPUT_SEGMENT_COUNT, self.tr('Number of segments')))
 
     def processAlgorithm(self, parameters, context, model_feedback):
-        feedback = QgsProcessingMultiStepFeedback(3, model_feedback)
+        feedback = QgsProcessingMultiStepFeedback(2, model_feedback)
 
         server_name = self.connection_options[self.parameterAsInt(parameters, self.SERVER_NAME, context)]
         graph_name = self.parameterAsString(parameters, self.GRAPH_NAME, context)
@@ -166,7 +166,6 @@ class DownloadGraphVersionAlgorithm(QgsProcessingAlgorithm):
             feedback.reportError('Cannot connect to Graphium', True)
             return {self.OUTPUT_SEGMENTS: None}
 
-        feedback.setCurrentStep(2)
         feedback.pushInfo("Start downloading task on Graphium server '" + server_name + "' ...")
         response = graphium.export_graph(graph_name, graph_version)
 
@@ -175,7 +174,7 @@ class DownloadGraphVersionAlgorithm(QgsProcessingAlgorithm):
             with open(json_file, 'w') as output_file:
                 output_file.write(json.dumps(response))
 
-        feedback.setCurrentStep(3)
+        feedback.setCurrentStep(2)
         if 'graphVersionMetadata' in response:
             if response['graphVersionMetadata']['segmentsCount'] == 0:
                 feedback.reportError('No segments available', False)

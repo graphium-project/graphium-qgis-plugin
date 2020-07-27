@@ -167,7 +167,7 @@ class DownloadGraphVersionAlgorithm(QgsProcessingAlgorithm):
             return {self.OUTPUT_SEGMENTS: None}
 
         feedback.pushInfo("Start downloading task on Graphium server '" + server_name + "' ...")
-        response = graphium.export_graph(graph_name, graph_version)
+        response = graphium.export_graph(graph_name, graph_version, False)
 
         if save_json_file:
             feedback.pushInfo("Write graph to JSON file...")
@@ -229,12 +229,12 @@ class DownloadGraphVersionAlgorithm(QgsProcessingAlgorithm):
         # Enter editing mode
         vector_layer.startEditing()
         attributes = list()
-        attributes.append(QgsField('id', QVariant.Int, 'Integer'))
+        attributes.append(QgsField('id', QVariant.LongLong, 'Integer'))
         attributes.append(QgsField('name', QVariant.String, 'Integer'))
         attributes.append(QgsField('startNodeIndex', QVariant.Int, 'Integer'))
-        attributes.append(QgsField('startNodeId', QVariant.Int, 'Integer'))
+        attributes.append(QgsField('startNodeId', QVariant.LongLong, 'Integer'))
         attributes.append(QgsField('endNodeIndex', QVariant.Int, 'Integer'))
-        attributes.append(QgsField('endNodeId', QVariant.Int, 'Integer'))
+        attributes.append(QgsField('endNodeId', QVariant.LongLong, 'Integer'))
         attributes.append(QgsField('maxSpeedTow', QVariant.Int, 'Integer'))
         attributes.append(QgsField('maxSpeedBkw', QVariant.Int, 'Integer'))
         attributes.append(QgsField('calcSpeedTow', QVariant.Int, 'Integer'))
@@ -248,6 +248,7 @@ class DownloadGraphVersionAlgorithm(QgsProcessingAlgorithm):
         attributes.append(QgsField('tunnel', QVariant.Bool, 'Boolean'))
         attributes.append(QgsField('bridge', QVariant.Bool, 'Boolean'))
         attributes.append(QgsField('urban', QVariant.Bool, 'Boolean'))
+        attributes.append(QgsField('length', QVariant.Double, 'Double'))
         data_provider.addAttributes(attributes)
         vector_layer.updateFields()
 

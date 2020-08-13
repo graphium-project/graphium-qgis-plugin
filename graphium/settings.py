@@ -23,11 +23,14 @@
  ***************************************************************************/
 """
 
-from PyQt5.QtCore import QSettings
 import json
+# PyQt imports
+from qgis.PyQt.QtCore import QSettings
 
 
 class Settings:
+
+    plugin_id = 'plugin-graphium'
 
     @staticmethod
     def get_locale():
@@ -61,30 +64,51 @@ class Settings:
     def get_selected_graph_version():
         return QSettings().value('plugin-graphium/selected_graph_version', '')
 
-    @staticmethod
-    def set_output_directory_default(output_directory_default):
-        QSettings().setValue("graphium_qgis/output_directory_default", output_directory_default)
+    def set_output_directory_default(self, output_directory_default):
+        QSettings().setValue(self.plugin_id + "/output_directory_default", output_directory_default)
 
-    @staticmethod
-    def get_output_directory_default():
-        return QSettings().value('graphium_qgis/output_directory_default', '')
+    def get_output_directory_default(self):
+        return QSettings().value(self.plugin_id + '/output_directory_default', '')
 
     # graph-manager
 
-    @staticmethod
-    def set_graph_file_default_dir(graph_file_default_dir):
-        QSettings().setValue("graphium_qgis/graph_file_default_dir", graph_file_default_dir)
+    def set_graph_file_default_dir(self, graph_file_default_dir):
+        QSettings().setValue(self.plugin_id + '/graph_file_default_dir', graph_file_default_dir)
 
-    @staticmethod
-    def get_graph_file_default_dir():
-        return QSettings().value('graphium_qgis/graph_file_default_dir', '')
+    def get_graph_file_default_dir(self):
+        return QSettings().value(self.plugin_id + '/graph_file_default_dir', '')
+
+    # hd
+
+    def set_hd_enabled(self, hd_enabled):
+        if type(hd_enabled) is bool:
+            QSettings().setValue(self.plugin_id + '/hd_enabled', hd_enabled)
+
+    def is_hd_enabled(self) -> bool:
+        hd_enabled = QSettings().value(self.plugin_id + '/hd_enabled', 'not_set')
+        if hd_enabled == 'not_set':
+            # set default value
+            self.set_hd_enabled(False)
+            hd_enabled = QSettings().value(self.plugin_id + '/hd_enabled')
+        return bool(hd_enabled)
+
+    # api
+
+    def set_timeout_sec(self, timeout_sec):
+        QSettings().setValue(self.plugin_id + '/timeout_sec', timeout_sec)
+
+    def get_timeout_sec(self) -> int:
+        timeout_sec = int(QSettings().value(self.plugin_id + '/timeout_sec', -1))
+        if timeout_sec == -1:
+            # set default value
+            self.set_timeout_sec(60*10)
+            timeout_sec = int(QSettings().value(self.plugin_id + '/timeout_sec'))
+        return timeout_sec
 
     # map-matcher
 
-    @staticmethod
-    def set_gpx_file_default_dir(gpx_file_default_dir):
-        QSettings().setValue("graphium_qgis/default_gpx_dir", gpx_file_default_dir)
+    def set_gpx_file_default_dir(self, gpx_file_default_dir):
+        QSettings().setValue(self.plugin_id + '/default_gpx_dir', gpx_file_default_dir)
 
-    @staticmethod
-    def get_gpx_file_default_dir():
-        return QSettings().value('graphium_qgis/default_gpx_dir', '')
+    def get_gpx_file_default_dir(self):
+        return QSettings().value(self.plugin_id + '/default_gpx_dir', '')

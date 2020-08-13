@@ -43,11 +43,12 @@ class GraphiumGraphDataApi(GraphiumApi):
     def __init__(self, feedback=None):
         super(GraphiumGraphDataApi, self).__init__(feedback)
 
-    def get_segment(self, graph_name, graph_version, segment_id):
+    def get_segment(self, graph_name, graph_version, segment_id, is_hd_segments=False):
         if self.connection is None:
             return []
 
-        url = self.connection.get_connection_url() + '/segments/graphs/' + graph_name + '/versions/' + graph_version
+        url = self.connection.get_connection_url() + '/' + ('hdwaysegments' if is_hd_segments else 'segments') +\
+              '/graphs/' + graph_name + '/versions/' + graph_version
 
         url_query_items = QUrlQuery()
         url_query_items.addQueryItem('ids', str(segment_id))
@@ -77,9 +78,10 @@ class GraphiumGraphDataApi(GraphiumApi):
             '/changes/graphs/' + graph_name + '/from/' + graph_version_a + '/to/' + graph_version_b
         return self.process_get_call(url, None)
 
-    def export_graph(self, graph_name, graph_version):
+    def export_graph(self, graph_name, graph_version, is_hd_segments=False):
         if self.connection is None:
             return []
 
-        url = self.connection.get_connection_url() + '/segments/graphs/' + graph_name + '/versions/' + graph_version
+        url = self.connection.get_connection_url() + '/' + ('hdwaysegments' if is_hd_segments else 'segments') +\
+              '/graphs/' + graph_name + '/versions/' + graph_version
         return self.process_get_call(url, None)

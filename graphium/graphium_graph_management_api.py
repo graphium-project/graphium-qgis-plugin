@@ -131,11 +131,12 @@ class GraphiumGraphManagementApi(GraphiumApi):
                 self.report_error("JSON Decode Error from position " + str(e.pos), True)
                 return {"error": {"msg": "JSON Decode Error from position " + str(e.pos)}}
 
-    def remove_graph_version(self, graph_name, graph_version, keep_metadata=True):
+    def remove_graph_version(self, graph_name, graph_version, is_hd_segments=False, keep_metadata=True):
         if self.connection is None:
             return []
 
-        url = self.connection.get_connection_url() + '/segments/graphs/' + graph_name + '/versions/' + graph_version + \
+        url = self.connection.get_connection_url() + '/' + ('hdwaysegments' if is_hd_segments else 'segments') +\
+              '/graphs/' + graph_name + '/versions/' + graph_version + \
               '?keepMetadata=' + str(keep_metadata)
 
         # url_query_items = QUrlQuery()
@@ -151,17 +152,6 @@ class GraphiumGraphManagementApi(GraphiumApi):
             '/' + attribute + '/' + value
 
         return self.process_put_call(url, value)
-
-    def get_segment(self, graph_name, graph_version, segment_id):
-        if self.connection is None:
-            return []
-
-        url = self.connection.get_connection_url() + '/segments/graphs/' + graph_name + '/versions/' + graph_version
-
-        url_query_items = QUrlQuery()
-        url_query_items.addQueryItem('ids', str(segment_id))
-
-        return self.process_get_call(url, url_query_items)
 
     def do_change_detection(self, graph_name, graph_version_a, graph_version_b):
         if self.connection is None:

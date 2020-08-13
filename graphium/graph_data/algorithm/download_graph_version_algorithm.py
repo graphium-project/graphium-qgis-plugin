@@ -48,6 +48,7 @@ class DownloadGraphVersionAlgorithm(QgsProcessingAlgorithm):
     SERVER_NAME = 'SERVER_NAME'
     GRAPH_NAME = 'GRAPH_NAME'
     GRAPH_VERSION = 'GRAPH_VERSION'
+    HD_WAYSEGMENTS = 'HD_WAYSEGMENTS'
 
     SAVE_JSON_FILE = 'SAVE_JSON_FILE'
     OUTPUT_SEGMENT_COUNT = 'OUTPUT_SEGMENT_COUNT'
@@ -66,6 +67,7 @@ class DownloadGraphVersionAlgorithm(QgsProcessingAlgorithm):
 
         self.connection_manager = GraphiumConnectionManager()
         self.connection_options = list()
+        self.settings = Settings()
 
     def createInstance(self):
         return DownloadGraphVersionAlgorithm()
@@ -131,6 +133,10 @@ class DownloadGraphVersionAlgorithm(QgsProcessingAlgorithm):
         self.addParameter(QgsProcessingParameterString(self.GRAPH_VERSION, self.tr('Graph version'),
                                                        default_graph_version, False, True))
 
+        if self.settings.is_hd_enabled():
+            self.addParameter(QgsProcessingParameterBoolean(self.HD_WAYSEGMENTS, self.tr('HD Waysegments'),
+                                                            False, True))
+
         self.addParameter(QgsProcessingParameterBoolean(self.SAVE_JSON_FILE, self.tr('Save JSON file'),
                                                         'False', True))
 
@@ -149,6 +155,10 @@ class DownloadGraphVersionAlgorithm(QgsProcessingAlgorithm):
         server_name = self.connection_options[self.parameterAsInt(parameters, self.SERVER_NAME, context)]
         graph_name = self.parameterAsString(parameters, self.GRAPH_NAME, context)
         graph_version = self.parameterAsString(parameters, self.GRAPH_VERSION, context)
+        if self.settings.is_hd_enabled():
+            is_hd_segments = self.parameterAsBool(parameters, self.HD_WAYSEGMENTS, context)
+        else:
+            is_hd_segments = False
         save_json_file = self.parameterAsBoolean(parameters, self.SAVE_JSON_FILE, context)
         json_file = self.parameterAsFileOutput(parameters, self.OUTPUT_JSON, context)
 
@@ -167,7 +177,7 @@ class DownloadGraphVersionAlgorithm(QgsProcessingAlgorithm):
             return {self.OUTPUT_SEGMENTS: None}
 
         feedback.pushInfo("Start downloading task on Graphium server '" + server_name + "' ...")
-        response = graphium.export_graph(graph_name, graph_version, False)
+        response = graphium.export_graph(graph_name, graph_version, is_hd_segments)
 
         if save_json_file:
             feedback.pushInfo("Write graph to JSON file...")
@@ -191,13 +201,14 @@ class DownloadGraphVersionAlgorithm(QgsProcessingAlgorithm):
             return {self.OUTPUT_SEGMENT_COUNT: 0}
 
         feedback.pushInfo("Prepare result vector layer ...")
-        vector_layer = self.prepare_vector_layer('segments_' + graph_name + '_' + graph_version)
+        vector_layer = self.prepare_vector_layer('segments_' + graph_name + '_' + graph_version,
+                                                 response['graphVersionMetadata']['type'])
 
         (sink, dest_id) = self.parameterAsSink(parameters, self.OUTPUT_SEGMENTS, context, vector_layer.fields(),
                                                QgsWkbTypes.LineString, vector_layer.sourceCrs())
 
-        total = 100.0 / len(response['waysegment'])
-        for current, segment in enumerate(response['waysegment']):
+        total = 100.0 / len(response[response['graphVersionMetadata']['type']])
+        for current, segment in enumerate(response[response['graphVersionMetadata']['type']]):
             if feedback.isCanceled():
                 break
             feature = QgsFeature()
@@ -205,7 +216,7 @@ class DownloadGraphVersionAlgorithm(QgsProcessingAlgorithm):
             feature.setFields(vector_layer.fields(), True)
             for attribute_key in segment:
                 try:
-                    if attribute_key == 'accessTow' or attribute_key == 'accessBkw':
+                    if attribute_key == 'accessTow' or attribute_key == 'accessBkw' or attribute_key == 'tags':
                         feature.setAttribute(attribute_key, json.dumps(segment[attribute_key]))
                     else:
                         feature.setAttribute(attribute_key, segment[attribute_key])
@@ -221,7 +232,7 @@ class DownloadGraphVersionAlgorithm(QgsProcessingAlgorithm):
                 }
 
     @staticmethod
-    def prepare_vector_layer(layer_name):
+    def prepare_vector_layer(layer_name, layer_type):
         layer_definition = 'LineString?crs=epsg:4326'
         vector_layer = QgsVectorLayer(layer_definition, layer_name, "memory")
         data_provider = vector_layer.dataProvider()
@@ -249,6 +260,13 @@ class DownloadGraphVersionAlgorithm(QgsProcessingAlgorithm):
         attributes.append(QgsField('bridge', QVariant.Bool, 'Boolean'))
         attributes.append(QgsField('urban', QVariant.Bool, 'Boolean'))
         attributes.append(QgsField('length', QVariant.Double, 'Double'))
+        attributes.append(QgsField('tags', QVariant.String, 'String'))
+        attributes.append(QgsField('leftBorderGeometry', QVariant.String, 'String'))
+        attributes.append(QgsField('leftBorderStartNodeId', QVariant.LongLong, 'Integer'))
+        attributes.append(QgsField('leftBorderEndNodeId', QVariant.LongLong, 'Integer'))
+        attributes.append(QgsField('rightBorderGeometry', QVariant.String, 'String'))
+        attributes.append(QgsField('rightBorderStartNodeId', QVariant.LongLong, 'Integer'))
+        attributes.append(QgsField('rightBorderEndNodeId', QVariant.LongLong, 'Integer'))
         data_provider.addAttributes(attributes)
         vector_layer.updateFields()
 

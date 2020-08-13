@@ -46,6 +46,7 @@ class RemoveGraphVersionAlgorithm(QgsProcessingAlgorithm):
     SERVER_NAME = 'SERVER_NAME'
     GRAPH_NAME = 'GRAPH_NAME'
     GRAPH_VERSION = 'GRAPH_VERSION'
+    HD_WAYSEGMENTS = 'HD_WAYSEGMENTS'
     KEEP_METADATA = 'KEEP_METADATA'
     OUTPUT_STATE = 'OUTPUT_STATE'
 
@@ -63,6 +64,7 @@ class RemoveGraphVersionAlgorithm(QgsProcessingAlgorithm):
 
         self.connection_manager = GraphiumConnectionManager()
         self.server_name_options = list()
+        self.settings = Settings()
 
     def createInstance(self):
         return RemoveGraphVersionAlgorithm()
@@ -126,6 +128,10 @@ class RemoveGraphVersionAlgorithm(QgsProcessingAlgorithm):
         self.addParameter(QgsProcessingParameterString(self.GRAPH_VERSION, self.tr('Graph version'), graph_version,
                                                        False, False))
 
+        if self.settings.is_hd_enabled():
+            self.addParameter(QgsProcessingParameterBoolean(self.HD_WAYSEGMENTS, self.tr('HD Waysegments'),
+                                                            False, True))
+
         self.addParameter(QgsProcessingParameterBoolean(self.KEEP_METADATA, self.tr('Keep metadata'),
                                                         True, True))
 
@@ -138,6 +144,10 @@ class RemoveGraphVersionAlgorithm(QgsProcessingAlgorithm):
         server_name = self.server_name_options[self.parameterAsInt(parameters, self.SERVER_NAME, context)]
         graph_name = self.parameterAsString(parameters, self.GRAPH_NAME, context)
         graph_version = self.parameterAsString(parameters, self.GRAPH_VERSION, context)
+        if self.settings.is_hd_enabled():
+            is_hd_segments = self.parameterAsBool(parameters, self.HD_WAYSEGMENTS, context)
+        else:
+            is_hd_segments = False
         keep_metadata = self.parameterAsBoolean(parameters, self.KEEP_METADATA, context)
 
         feedback.pushInfo("Connect to Graphium server '" + server_name + "' ...")
@@ -155,7 +165,7 @@ class RemoveGraphVersionAlgorithm(QgsProcessingAlgorithm):
 
         feedback.setProgress(10)
 
-        response = graphium.remove_graph_version(graph_name, graph_version, keep_metadata)
+        response = graphium.remove_graph_version(graph_name, graph_version, is_hd_segments, keep_metadata)
 
         feedback.setProgress(100)
 

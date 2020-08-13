@@ -44,6 +44,7 @@ from .algorithm.activate_graph_version_algorithm import (ActivateGraphVersionAlg
 from .algorithm.add_graph_version_algorithm import (AddGraphVersionAlgorithm)
 from .algorithm.remove_graph_version_algorithm import (RemoveGraphVersionAlgorithm)
 from .algorithm.update_graph_version_attribute_algorithm import (UpdateGraphVersionAttributeAlgorithm)
+from ..graph_data.algorithm.download_graph_version_algorithm import (DownloadGraphVersionAlgorithm)
 from .model.table_graph_version import TableGraphVersionModel
 from .model.table_graph_name import TableGraphNameModel
 from ..settings import Settings
@@ -79,6 +80,7 @@ class GraphiumQGISGraphManager:
         self.graphium = GraphiumGraphManagementApi()
         self.connection_manager = GraphiumConnectionManager()
         self.selected_connection = None
+        self.settings = Settings()
         self.graph_names = []
         self.table_graph_names_data = []
         self.graph_versions = []
@@ -516,10 +518,14 @@ class GraphiumQGISGraphManager:
             return
 
         parameters = {
-                ActivateGraphVersionAlgorithm.SERVER_NAME: self.dlg.cboConnections.currentIndex(),
-                ActivateGraphVersionAlgorithm.GRAPH_NAME: graph_name,
-                ActivateGraphVersionAlgorithm.GRAPH_VERSION: graph_version['version']
+                DownloadGraphVersionAlgorithm.SERVER_NAME: self.dlg.cboConnections.currentIndex(),
+                DownloadGraphVersionAlgorithm.GRAPH_NAME: graph_name,
+                DownloadGraphVersionAlgorithm.GRAPH_VERSION: graph_version['version']
             }
+
+        if self.settings.is_hd_enabled():
+            parameters[DownloadGraphVersionAlgorithm.HD_WAYSEGMENTS] =\
+                True if graph_version.get('type', '') == 'hdwaysegment' else False
 
         try:
             processing.execAlgorithmDialog("Graphium:DownloadGraphVersion", parameters)

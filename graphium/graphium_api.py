@@ -28,6 +28,7 @@ import urllib.error
 import urllib.parse
 import json
 import requests
+from requests import Timeout
 # PyQt imports
 from qgis.PyQt.QtCore import (QUrl, QSettings, QEventLoop)
 from qgis.PyQt.QtNetwork import (QNetworkRequest, QNetworkReply)
@@ -35,7 +36,7 @@ from qgis.PyQt.QtCore import (QJsonDocument)
 # qgis imports
 from qgis.core import (QgsNetworkAccessManager)
 # Graphium
-from requests import Timeout
+from .settings import Settings
 
 
 class GraphiumApi:
@@ -54,12 +55,9 @@ class GraphiumApi:
         self.network_access_manager.downloadProgress.connect(self.download_progress)
         self.connection = None
         self.feedback = feedback
+        self.settings = Settings()
 
-        timeout_sec = int(QSettings().value('plugin-graphium/timeout_sec', -1))
-        if timeout_sec == -1:
-            QSettings().setValue("plugin-graphium/timeout_sec", 60*10)
-        timeout_sec = int(QSettings().value('plugin-graphium/timeout_sec', 60*10))
-        self.network_access_manager.setTimeout(timeout_sec * 1000)
+        self.network_access_manager.setTimeout(self.settings.get_timeout_sec() * 1000)
 
     def process_get_call(self, url, url_query_items):
         """

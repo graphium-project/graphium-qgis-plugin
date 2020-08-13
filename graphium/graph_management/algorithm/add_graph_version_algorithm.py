@@ -47,7 +47,7 @@ class AddGraphVersionAlgorithm(QgsProcessingAlgorithm):
     SERVER_NAME = 'SERVER_NAME'
     GRAPH_NAME = 'GRAPH_NAME'
     GRAPH_VERSION = 'GRAPH_VERSION'
-    # HD_WAYSEGMENTS = 'HD_WAYSEGMENTS'
+    HD_WAYSEGMENTS = 'HD_WAYSEGMENTS'
     OVERRIDE_IF_EXISTS = 'OVERRIDE_IF_EXISTS'
     OUTPUT_STATE = 'OUTPUT_STATE'
 
@@ -65,6 +65,7 @@ class AddGraphVersionAlgorithm(QgsProcessingAlgorithm):
 
         self.connection_manager = GraphiumConnectionManager()
         self.server_name_options = list()
+        self.settings = Settings()
 
     def createInstance(self):
         return AddGraphVersionAlgorithm()
@@ -98,10 +99,8 @@ class AddGraphVersionAlgorithm(QgsProcessingAlgorithm):
         Definition of inputs and outputs of the algorithm, along with some other properties.
         """
 
-        self.addParameter(QgsProcessingParameterFile(self.SOURCE_FILE,
-                                                     self.tr('Input graph file'),
-                                                     0, 'json',
-                                                     None, False))
+        self.addParameter(QgsProcessingParameterFile(self.SOURCE_FILE, self.tr('Input graph file'),
+                                                     0, 'json', None, False, "*.json;*.zip"))
 
         # read server connections and prepare enum items
         self.server_name_options.clear()
@@ -129,9 +128,10 @@ class AddGraphVersionAlgorithm(QgsProcessingAlgorithm):
         self.addParameter(QgsProcessingParameterString(self.GRAPH_VERSION, self.tr('Graph version'), graph_version,
                                                        False, False))
 
-        # self.addParameter(QgsProcessingParameterBoolean(self.HD_WAYSEGMENTS,
-        #                                                 self.tr('HD Waysegments'),
-        #                                                 False, True))
+        if self.settings.is_hd_enabled():
+            self.addParameter(QgsProcessingParameterBoolean(self.HD_WAYSEGMENTS,
+                                                            self.tr('HD Waysegments'),
+                                                            False, True))
         self.addParameter(QgsProcessingParameterBoolean(self.OVERRIDE_IF_EXISTS,
                                                         self.tr('Override graph version if it exists'),
                                                         True, True))
@@ -143,8 +143,10 @@ class AddGraphVersionAlgorithm(QgsProcessingAlgorithm):
         server_name = self.server_name_options[self.parameterAsInt(parameters, self.SERVER_NAME, context)]
         graph_name = self.parameterAsString(parameters, self.GRAPH_NAME, context)
         graph_version = self.parameterAsString(parameters, self.GRAPH_VERSION, context)
-        # is_hd_segments = self.parameterAsBool(parameters, self.HD_WAYSEGMENTS, context)
-        is_hd_segments = False
+        if self.settings.is_hd_enabled():
+            is_hd_segments = self.parameterAsBool(parameters, self.HD_WAYSEGMENTS, context)
+        else:
+            is_hd_segments = False
         override_if_exists = self.parameterAsBool(parameters, self.OVERRIDE_IF_EXISTS, context)
 
         feedback.pushInfo("Connect to Graphium server '" + server_name + "' ...")

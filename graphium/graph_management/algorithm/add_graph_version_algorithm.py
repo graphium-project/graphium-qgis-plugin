@@ -134,7 +134,7 @@ class AddGraphVersionAlgorithm(QgsProcessingAlgorithm):
                                                             False, True))
         self.addParameter(QgsProcessingParameterBoolean(self.OVERRIDE_IF_EXISTS,
                                                         self.tr('Override graph version if it exists'),
-                                                        True, True))
+                                                        False, True))
 
         self.addOutput(QgsProcessingOutputString(self.OUTPUT_STATE, self.tr('State')))
 

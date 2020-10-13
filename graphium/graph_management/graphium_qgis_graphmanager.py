@@ -378,7 +378,7 @@ class GraphiumQGISGraphManager:
             AddGraphVersionAlgorithm.SERVER_NAME: self.dlg.cboConnections.currentIndex(),
             AddGraphVersionAlgorithm.GRAPH_NAME: graph_name if graph_name else '',
             AddGraphVersionAlgorithm.GRAPH_VERSION: graph_version['version'] if graph_version else '',
-            AddGraphVersionAlgorithm.OVERRIDE_IF_EXISTS: True
+            AddGraphVersionAlgorithm.OVERRIDE_IF_EXISTS: False
         }
 
         processing.execAlgorithmDialog("Graphium:AddGraphVersion", parameters)
@@ -396,7 +396,7 @@ class GraphiumQGISGraphManager:
             AddGraphVersionAlgorithm.SERVER_NAME: self.dlg.cboConnections.currentIndex() + 1,
             AddGraphVersionAlgorithm.GRAPH_NAME: graph_name if graph_name else '',
             AddGraphVersionAlgorithm.GRAPH_VERSION: graph_version['version'] if graph_version else '',
-            AddGraphVersionAlgorithm.OVERRIDE_IF_EXISTS: True
+            AddGraphVersionAlgorithm.OVERRIDE_IF_EXISTS: False
         }
 
         processing.execAlgorithmDialog("Graphium:osm2graphiumconverter", parameters)
@@ -414,7 +414,7 @@ class GraphiumQGISGraphManager:
             AddGraphVersionAlgorithm.SERVER_NAME: self.dlg.cboConnections.currentIndex() + 1,
             AddGraphVersionAlgorithm.GRAPH_NAME: graph_name if graph_name else '',
             AddGraphVersionAlgorithm.GRAPH_VERSION: graph_version['version'] if graph_version else '',
-            AddGraphVersionAlgorithm.OVERRIDE_IF_EXISTS: True
+            AddGraphVersionAlgorithm.OVERRIDE_IF_EXISTS: False
         }
 
         processing.execAlgorithmDialog("Graphium:gip2graphiumconverter", parameters)

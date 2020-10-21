@@ -313,6 +313,10 @@ class GraphiumApi:
         url = self.connection.get_connection_url() + '/capabilities'
         response = self.process_get_call(url, None)
 
+        if "error" in response and response["error"]["msg"] == '404 ContentNotFoundError':
+            self.report_info("Check capability not available on this server. Proceed with request...")
+            return True
+
         if capability in response:
             return True
         else:

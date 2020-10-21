@@ -74,5 +74,6 @@ class GraphiumUtilitiesApi(GraphiumApi):
         # url_query_items.addQueryItem('cutsegments', 'true' if cut_segments else 'false')
         url_query_items.addQueryItem('mode', routing_mode)
         url_query_items.addQueryItem('criteria', criteria)
+        url_query_items.addQueryItem('algo', 'dijkstra')
 
         return self.process_get_call(url, url_query_items)

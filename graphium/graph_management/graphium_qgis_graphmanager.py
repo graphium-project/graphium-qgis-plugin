@@ -223,7 +223,7 @@ class GraphiumQGISGraphManager:
         self.graph_names = []
         if self.selected_connection:
             response = self.graphium.get_graph_names()
-            if not 'error' in response:
+            if 'error' not in response:
                 self.graph_names = response
             else:
                 self.iface.messageBar().pushMessage("Graphium", "Cannot retrieve graphs from Graphium server [" +

@@ -184,7 +184,7 @@ class DownloadGraphVersionAlgorithm(QgsProcessingAlgorithm):
             with open(json_file, 'w') as output_file:
                 output_file.write(json.dumps(response))
 
-        feedback.setCurrentStep(2)
+        feedback.setCurrentStep(1)
         if 'graphVersionMetadata' in response:
             if response['graphVersionMetadata']['segmentsCount'] == 0:
                 feedback.reportError('No segments available', False)
@@ -261,7 +261,7 @@ class DownloadGraphVersionAlgorithm(QgsProcessingAlgorithm):
         attributes.append(QgsField('urban', QVariant.Bool, 'Boolean'))
         attributes.append(QgsField('length', QVariant.Double, 'Double'))
         attributes.append(QgsField('tags', QVariant.String, 'String'))
-        if layer_type == 'hdwaysegments':
+        if layer_type == 'hdwaysegment' or layer_type == 'hdwaysegments':
             attributes.append(QgsField('leftBorderGeometry', QVariant.String, 'String'))
             attributes.append(QgsField('leftBorderStartNodeId', QVariant.LongLong, 'Integer'))
             attributes.append(QgsField('leftBorderEndNodeId', QVariant.LongLong, 'Integer'))

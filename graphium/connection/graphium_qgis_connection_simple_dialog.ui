@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>436</width>
-    <height>163</height>
+    <height>186</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -28,8 +28,21 @@
      <layout class="QVBoxLayout" name="verticalLayout_3">
       <item>
        <layout class="QGridLayout" name="gridLayout_4">
-        <item row="0" column="1">
-         <widget class="QLineEdit" name="txtName"/>
+        <item row="1" column="0">
+         <widget class="QLabel" name="lblSimpleUrl">
+          <property name="minimumSize">
+           <size>
+            <width>50</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>URL</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="QLineEdit" name="txtSimpleUrl"/>
         </item>
         <item row="0" column="0">
          <widget class="QLabel" name="label_3">
@@ -50,21 +63,15 @@
           </property>
          </widget>
         </item>
-        <item row="1" column="0">
-         <widget class="QLabel" name="lblSimpleUrl">
-          <property name="minimumSize">
-           <size>
-            <width>50</width>
-            <height>0</height>
-           </size>
-          </property>
+        <item row="0" column="1">
+         <widget class="QLineEdit" name="txtName"/>
+        </item>
+        <item row="2" column="1">
+         <widget class="QCheckBox" name="chkReadOnly">
           <property name="text">
-           <string>URL</string>
+           <string>Set to read-only</string>
           </property>
          </widget>
-        </item>
-        <item row="1" column="1">
-         <widget class="QLineEdit" name="txtSimpleUrl"/>
         </item>
        </layout>
       </item>

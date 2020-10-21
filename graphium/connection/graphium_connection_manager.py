@@ -37,7 +37,7 @@ class GraphiumConnectionManager:
         # prepare output
         server_list = list()
         for conn in self.connections:
-            server_list.append([conn.name, conn.server.value, conn.host, conn.port, conn.base_url])
+            server_list.append([conn.name, conn.server.value, conn.host, conn.port, conn.base_url, conn.read_only])
         # write output
         Settings.set_graphium_servers(server_list)
 
@@ -49,7 +49,8 @@ class GraphiumConnectionManager:
         for conn in connection_list:
             if server_type is None or conn[1] == server_type.value:
                 self.connections.append(Connection(conn[0], GraphiumServerType(conn[1]), conn[2], conn[3],
-                                                   conn[4] if len(conn) > 4 else ''))
+                                                   conn[4] if len(conn) > 4 else '',
+                                                   bool(conn[5]) if len(conn) > 5 else True))
         return self.connections
 
     def select_graphium_server(self, server_name, server_type=None):

@@ -77,14 +77,18 @@ class GraphiumApi:
         reply = self.network_access_manager.blockingGet(request, '', True, self.feedback)
         return self.process_qgs_reply(reply)
 
-    def process_post_call(self, url, url_query_items, data):
+    def process_post_call(self, url, url_query_items, data, is_read_only=True):
         """
         Run a POST request and return reply data
         :param url: url for request
         :param url_query_items:
         :param data:
+        :param is_read_only: True if the request does not update data
         :return: response or error message in json format
         """
+
+        if self.connection.read_only and not is_read_only:
+            return {"error": {"msg": "Graphium connection is set to read-only!"}}
 
         url_query = QUrl(url)
         self.report_info('POST ' + url_query.toString())
@@ -109,6 +113,9 @@ class GraphiumApi:
         :param data:
         :return: response or error message in json format
         """
+
+        if self.connection.read_only:
+            return {"error": {"msg": "Graphium connection is set to read-only!"}}
 
         self.report_info('PUT ' + url)
 
@@ -146,6 +153,9 @@ class GraphiumApi:
         :return: response or error message in json format
         """
 
+        if self.connection.read_only:
+            return {"error": {"msg": "Graphium connection is set to read-only!"}}
+
         url_query = QUrl(url)
         self.report_info('PUT ' + url_query.toString())
 
@@ -166,6 +176,10 @@ class GraphiumApi:
         :param url: url for request
         :return: response or error message in json format
         """
+
+        if self.connection.read_only:
+            return {"error": {"msg": "Graphium connection is set to read-only!"}}
+
         self.report_info('DELETE ' + url)
 
         try:
@@ -203,6 +217,9 @@ class GraphiumApi:
         :param url: url for request
         :return: response or error message in json format
         """
+
+        if self.connection.read_only:
+            return {"error": {"msg": "Graphium connection is set to read-only!"}}
 
         url_query = QUrl(url)
         self.report_info('DELETE ' + url_query.toString())

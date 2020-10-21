@@ -91,7 +91,7 @@ class GraphiumGraphManagementApi(GraphiumApi):
         url_query_items = QUrlQuery()
         url_query_items.addQueryItem('overrideIfExists', str(override_if_exists))
 
-        return self.process_post_call(url, url_query_items, new_graph_file)
+        return self.process_post_call(url, url_query_items, new_graph_file, False)
 
     def add_graph_version(self, new_graph_file, graph_name, graph_version, is_hd_segments, override_if_exists):
         if self.connection is None:

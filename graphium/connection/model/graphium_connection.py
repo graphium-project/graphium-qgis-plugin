@@ -29,12 +29,13 @@ from .graphium_server_type import GraphiumServerType
 class Connection:
 
     def __init__(self, name='', server=GraphiumServerType.POSTGRES, host='http://localhost', port=None,
-                 base_url='graphium/api'):
+                 base_url='graphium/api', read_only=True):
         self.name = name
         self.server = server
         self.host = host
         self.port = port
         self.base_url = base_url
+        self.read_only = read_only
 
     def get_connection_url(self):
         protocol = ''

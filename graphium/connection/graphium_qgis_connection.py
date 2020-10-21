@@ -77,6 +77,8 @@ class GraphiumQGISConnectionManager:
         # self.dlg.txtBaseUrl.setText(self.connection.base_url)
         self.dlg.txtSimpleUrl.setText(self.connection.get_simple_url())
 
+        self.dlg.chkReadOnly.setChecked(self.connection.read_only)
+
         # self.dlg.tabWidgetConnection.currentChanged.connect(self.connection_widget_tab_changed)
         self.dlg.btnConnect.clicked.connect(self.connect_to_graphium)
 
@@ -144,6 +146,8 @@ class GraphiumQGISConnectionManager:
         self.connection.host = protocol + host
         self.connection.port = port if port else None
         self.connection.base_url = base_url
+
+        self.connection.read_only = self.dlg.chkReadOnly.isChecked()
 
         # else:
         #     self.connection.host = self.dlg.txtHost.text()

@@ -55,29 +55,6 @@ class GraphiumGraphDataApi(GraphiumApi):
 
         return self.process_get_call(url, url_query_items)
 
-    def do_change_detection(self, graph_name, graph_version_a, graph_version_b):
-        if self.connection is None:
-            return []
-
-        url = self.connection.get_connection_url() + '/changes/graphs/' + graph_name + '/from/' + graph_version_a + \
-              '/to/' + graph_version_b + '/dodetect'
-        return self.process_get_call(url, None)
-
-    def get_changesets(self, graph_name):
-        if self.connection is None:
-            return []
-
-        url = self.connection.get_connection_url() + '/changes/graphs/' + graph_name
-        return self.process_get_call(url, None)
-
-    def get_changeset_changes(self, graph_name, graph_version_a, graph_version_b):
-        if self.connection is None:
-            return []
-
-        url = self.connection.get_connection_url() + \
-            '/changes/graphs/' + graph_name + '/from/' + graph_version_a + '/to/' + graph_version_b
-        return self.process_get_call(url, None)
-
     def export_graph(self, graph_name, graph_version, is_hd_segments=False):
         if self.connection is None:
             return []

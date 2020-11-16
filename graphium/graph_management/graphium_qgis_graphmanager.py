@@ -97,11 +97,12 @@ class GraphiumQGISGraphManager:
 
         self.dlg.btnRefreshGraphNames.clicked.connect(self.switch_to_graph_name_view)
         self.dlg.btnManageSelectedGraphName.clicked.connect(self.switch_to_graph_version_view)
-        self.dlg.tableGraphNames.doubleClicked .connect(self.switch_to_graph_version_view)
+        self.dlg.tableGraphNames.doubleClicked.connect(self.switch_to_graph_version_view)
 
         self.dlg.btnHideGraphVersions.clicked.connect(self.switch_to_graph_name_view)
         self.dlg.btnRefreshGraphVersions.clicked.connect(self.switch_to_graph_version_view)
         self.dlg.btnSetDefaultGraphVersion.clicked.connect(self.set_default_graph_version)
+        self.dlg.tableGraphVersions.doubleClicked.connect(self.download_graph_version_to_map)
 
         add_graph_name_menu = QMenu()
         add_graph_name_menu.addAction('Add ...', self.add_graph_version)
@@ -507,6 +508,7 @@ class GraphiumQGISGraphManager:
 
         # update ui
         self.switch_to_graph_version_view()
+
 
     def download_graph_version_to_map(self):
         """

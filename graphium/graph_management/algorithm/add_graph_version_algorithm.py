@@ -24,6 +24,7 @@
 """
 
 import os
+import json
 # PyQt5 imports
 from PyQt5.QtGui import (QIcon)
 # qgis imports
@@ -47,7 +48,6 @@ class AddGraphVersionAlgorithm(QgsProcessingAlgorithm):
     SERVER_NAME = 'SERVER_NAME'
     GRAPH_NAME = 'GRAPH_NAME'
     GRAPH_VERSION = 'GRAPH_VERSION'
-    HD_WAYSEGMENTS = 'HD_WAYSEGMENTS'
     OVERRIDE_IF_EXISTS = 'OVERRIDE_IF_EXISTS'
     OUTPUT_STATE = 'OUTPUT_STATE'
 
@@ -128,10 +128,6 @@ class AddGraphVersionAlgorithm(QgsProcessingAlgorithm):
         self.addParameter(QgsProcessingParameterString(self.GRAPH_VERSION, self.tr('Graph version'), graph_version,
                                                        False, False))
 
-        if self.settings.is_hd_enabled():
-            self.addParameter(QgsProcessingParameterBoolean(self.HD_WAYSEGMENTS,
-                                                            self.tr('HD Waysegments'),
-                                                            False, True))
         self.addParameter(QgsProcessingParameterBoolean(self.OVERRIDE_IF_EXISTS,
                                                         self.tr('Override graph version if it exists'),
                                                         False, True))
@@ -143,10 +139,6 @@ class AddGraphVersionAlgorithm(QgsProcessingAlgorithm):
         server_name = self.server_name_options[self.parameterAsInt(parameters, self.SERVER_NAME, context)]
         graph_name = self.parameterAsString(parameters, self.GRAPH_NAME, context)
         graph_version = self.parameterAsString(parameters, self.GRAPH_VERSION, context)
-        if self.settings.is_hd_enabled():
-            is_hd_segments = self.parameterAsBool(parameters, self.HD_WAYSEGMENTS, context)
-        else:
-            is_hd_segments = False
         override_if_exists = self.parameterAsBool(parameters, self.OVERRIDE_IF_EXISTS, context)
 
         feedback.pushInfo("Connect to Graphium server '" + server_name + "' ...")
@@ -163,6 +155,12 @@ class AddGraphVersionAlgorithm(QgsProcessingAlgorithm):
             return False
 
         feedback.setProgress(10)
+
+        graph_metadata = self.read_metadata(source_file, feedback)
+
+        is_hd_segments = True if graph_metadata["graphVersionMetadata"]["type"] == "hdwaysegment" else False
+        if is_hd_segments:
+            feedback.pushInfo('Graph version is HD dataset')
 
         response = graphium.add_graph_version(source_file, graph_name, graph_version, is_hd_segments,
                                               override_if_exists)
@@ -188,3 +186,33 @@ class AddGraphVersionAlgorithm(QgsProcessingAlgorithm):
         else:
             feedback.reportError('Unknown error', True)
             return {self.OUTPUT_STATE: None}
+
+    @staticmethod
+    def read_metadata(source_file, feedback):
+        """
+        Reads and returns metadata section of graph version JSON file
+        :param source_file:
+        :param feedback:
+        :return: JSON object that includes the graphVersionMetadata
+        """
+
+        string = ""
+        number_parenthesis = 0
+        with open(source_file, 'r+') as f:
+            while len(string) < 30 or number_parenthesis > 1:
+                buf = f.read(1)
+                if buf:
+                    string += buf
+                    if buf == '{':
+                        number_parenthesis += 1
+                    elif buf == '}':
+                        number_parenthesis -= 1
+                else:
+                    break
+
+        string += '}'
+
+        try:
+            return json.loads(string)
+        except json.JSONDecodeError as e:
+            feedback.reportError("JSON Decode Error from position " + str(e.pos), True)

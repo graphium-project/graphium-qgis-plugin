@@ -216,7 +216,8 @@ class DownloadGraphVersionAlgorithm(QgsProcessingAlgorithm):
             feature.setFields(vector_layer.fields(), True)
             for attribute_key in segment:
                 try:
-                    if attribute_key == 'accessTow' or attribute_key == 'accessBkw' or attribute_key == 'tags':
+                    if attribute_key == 'accessTow' or attribute_key == 'accessBkw' or attribute_key == 'tags'\
+                            or attribute_key == 'connection':
                         feature.setAttribute(attribute_key, json.dumps(segment[attribute_key]))
                     else:
                         feature.setAttribute(attribute_key, segment[attribute_key])
@@ -261,6 +262,7 @@ class DownloadGraphVersionAlgorithm(QgsProcessingAlgorithm):
         attributes.append(QgsField('urban', QVariant.Bool, 'Boolean'))
         attributes.append(QgsField('length', QVariant.Double, 'Double'))
         attributes.append(QgsField('tags', QVariant.String, 'String'))
+        attributes.append(QgsField('connection', QVariant.String, 'String'))
         if layer_type == 'hdwaysegment' or layer_type == 'hdwaysegments':
             attributes.append(QgsField('leftBorderGeometry', QVariant.String, 'String'))
             attributes.append(QgsField('leftBorderStartNodeId', QVariant.LongLong, 'Integer'))

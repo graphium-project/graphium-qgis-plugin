@@ -37,7 +37,15 @@ class GraphiumConnectionManager:
         # prepare output
         server_list = list()
         for conn in self.connections:
-            server_list.append([conn.name, conn.server.value, conn.host, conn.port, conn.base_url, conn.read_only])
+            server_list.append({
+                'name': conn.name,
+                'server_type': conn.server.value,
+                'host': conn.host,
+                'port': conn.port,
+                'base_url': conn.base_url,
+                'auth_cfg': conn.auth_cfg,
+                'read_only': conn.read_only
+            })
         # write output
         Settings.set_graphium_servers(server_list)
 
@@ -46,11 +54,22 @@ class GraphiumConnectionManager:
         connection_list = Settings.get_graphium_servers()
         # prepare connections
         self.connections = list()
-        for conn in connection_list:
-            if server_type is None or conn[1] == server_type.value:
-                self.connections.append(Connection(conn[0], GraphiumServerType(conn[1]), conn[2], conn[3],
-                                                   conn[4] if len(conn) > 4 else '',
-                                                   bool(conn[5]) if len(conn) > 5 else True))
+        for c in connection_list:
+            if isinstance(c, dict):
+                connection = Connection(
+                    c['name'], GraphiumServerType(c['server_type']),
+                    c['host'], c['port'],
+                    c['base_url'] if c['base_url'] else '',
+                    c['auth_cfg'] if c['auth_cfg'] else '',
+                    bool(c['read_only']) if 'read_only' in c and isinstance(c['read_only'], bool) else True
+                )
+                self.connections.append(connection)
+
+            else:
+                if server_type is None or c[1] == server_type.value:
+                    self.connections.append(Connection(c[0], GraphiumServerType(c[1]), c[2], c[3],
+                                                       c[4] if len(c) > 4 else '',
+                                                       bool(c[5]) if len(c) > 5 else True))
         return self.connections
 
     def select_graphium_server(self, server_name, server_type=None):

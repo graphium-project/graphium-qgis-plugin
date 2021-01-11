@@ -50,11 +50,13 @@ class GraphiumQGISConnectionManager:
         self.iface = iface
         # initialize plugin directory
         self.plugin_dir = os.path.dirname(__file__)
+        # initialize settings
+        self.settings = Settings()
         # initialize locale
         locale_path = os.path.join(
             self.plugin_dir,
             'i18n',
-            'GraphiumQGIS_{}.qm'.format(Settings.get_locale()))
+            'GraphiumQGIS_{}.qm'.format(self.settings.get_locale()))
 
         if os.path.exists(locale_path):
             self.translator = QTranslator()
@@ -77,6 +79,13 @@ class GraphiumQGISConnectionManager:
         # self.dlg.txtBaseUrl.setText(self.connection.base_url)
         self.dlg.txtSimpleUrl.setText(self.connection.get_simple_url())
 
+        self.dlg.authConfigSelect.setConfigId(self.connection.auth_cfg)
+        if self.settings.get_value('enable_auth', False):
+            self.dlg.lblAuthLabel.setVisible(True)
+            self.dlg.authConfigSelect.setVisible(True)
+        else:
+            self.dlg.lblAuthLabel.setVisible(False)
+            self.dlg.authConfigSelect.setVisible(False)
         self.dlg.chkReadOnly.setChecked(self.connection.read_only)
 
         # self.dlg.tabWidgetConnection.currentChanged.connect(self.connection_widget_tab_changed)
@@ -147,6 +156,7 @@ class GraphiumQGISConnectionManager:
         self.connection.port = port if port else None
         self.connection.base_url = base_url
 
+        self.connection.auth_cfg = self.dlg.authConfigSelect.configId()
         self.connection.read_only = self.dlg.chkReadOnly.isChecked()
 
         # else:

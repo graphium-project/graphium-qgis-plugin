@@ -112,3 +112,13 @@ class Settings:
 
     def get_gpx_file_default_dir(self):
         return QSettings().value(self.plugin_id + '/default_gpx_dir', '')
+
+    def set_value(self, key, value):
+        QSettings().setValue(self.plugin_id + '/' + key, value)
+
+    def get_value(self, key, default_value=None):
+        if QSettings().contains(self.plugin_id + '/' + key):
+            return QSettings().value(self.plugin_id + '/' + key, default_value)
+        else:
+            QSettings().setValue(self.plugin_id + '/' + key, default_value)
+            return default_value

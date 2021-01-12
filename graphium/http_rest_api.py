@@ -30,7 +30,7 @@ import json
 import requests
 from requests import Timeout
 # PyQt imports
-from qgis.PyQt.QtCore import (QUrl, QSettings, QByteArray, QEventLoop)
+from qgis.PyQt.QtCore import (QUrl, QEventLoop)
 from qgis.PyQt.QtNetwork import (QNetworkRequest, QNetworkReply)
 from qgis.PyQt.QtCore import (QJsonDocument)
 # qgis imports
@@ -39,7 +39,7 @@ from qgis.core import (QgsNetworkAccessManager)
 from .settings import Settings
 
 
-class GraphiumApi:
+class HttpRestApi:
     """
     sources:
      - https://qgis.org/pyqgis/master/core/QgsNetworkAccessManager.html
@@ -74,12 +74,7 @@ class GraphiumApi:
             url_query.setQuery(url_query_items)
 
         request = QNetworkRequest(url_query)
-        if self.connection.auth_cfg != '':
-            # request.setRawHeader("Accept-Encoding".encode("utf-8"), "gzip,deflate".encode("utf-8"))
-            request.setRawHeader("Accept".encode("utf-8"),
-                                 "text/html,application/xhtml+xml,application/xml".encode("utf-8"))
-        reply = self.network_access_manager.blockingGet(request, self.connection.auth_cfg, True, self.feedback)
-        # reply = self.network_access_manager.blockingGet(request, '', True, self.feedback)
+        reply = self.network_access_manager.blockingGet(request, '', True, self.feedback)
         return self.process_qgs_reply(reply)
 
     def process_post_call(self, url, url_query_items, data, is_read_only=True):
@@ -107,8 +102,7 @@ class GraphiumApi:
 
         request = QNetworkRequest(url_query)
         request.setHeader(QNetworkRequest.ContentTypeHeader, "application/json")
-        reply = self.network_access_manager.blockingPost(request, data_byte_array.toJson(), self.connection.auth_cfg,
-                                                         True, self.feedback)
+        reply = self.network_access_manager.blockingPost(request, data_byte_array.toJson(), '', True, self.feedback)
         return self.process_qgs_reply(reply)
 
     def process_put_call_using_requests(self, url, data=None):
@@ -258,7 +252,8 @@ class GraphiumApi:
         if reply.error() == QNetworkReply.NoError:
             header_content_type_label = 'Content-Type'
             if reply.hasRawHeader(header_content_type_label.encode('utf8')):
-                header_content_type_value = reply.rawHeader(header_content_type_label.encode('utf8')).data().decode('utf8')
+                header_content_type_value = reply.rawHeader(header_content_type_label.encode('utf8')).data().decode(
+                    'utf8')
                 content_type, charset = header_content_type_value.split(';')
                 content_type = content_type.strip()
                 charset = charset.strip().replace('-', '').lower()  # TODO use this (currently raises LookupError)

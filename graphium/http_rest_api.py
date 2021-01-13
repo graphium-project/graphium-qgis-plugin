@@ -350,23 +350,9 @@ class HttpRestApi:
         self.connection = None
 
     def check_connection(self):
-        url = self.connection.get_connection_url() + '/status'
-        response = self.process_get_call(url, None)
-
-        if response.get('serverName'):
-            return True
-        else:
-            return False
-
-    def check_capability(self, capability):
-        url = self.connection.get_connection_url() + '/capabilities'
-        response = self.process_get_call(url, None)
-
-        if "error" in response and response["error"]["msg"] == '404 ContentNotFoundError':
-            self.report_info("Check capability not available on this server. Proceed with request...")
-            return True
-
-        if capability in response:
-            return True
-        else:
-            return False
+        """
+        Checks the connection
+        to be overridden in child implementation
+        :return:
+        """
+        return False

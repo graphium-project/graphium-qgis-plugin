@@ -28,13 +28,14 @@ import urllib.error
 import urllib.parse
 import json
 import requests
+import base64
 from requests import Timeout
 # PyQt imports
 from qgis.PyQt.QtCore import (QUrl, QEventLoop)
 from qgis.PyQt.QtNetwork import (QNetworkRequest, QNetworkReply)
 from qgis.PyQt.QtCore import (QJsonDocument)
 # qgis imports
-from qgis.core import (QgsNetworkAccessManager)
+from qgis.core import (QgsApplication, QgsNetworkAccessManager, QgsAuthMethodConfig)
 # Graphium
 from .settings import Settings
 
@@ -53,9 +54,11 @@ class HttpRestApi:
     def __init__(self, feedback=None):
         self.network_access_manager = QgsNetworkAccessManager.instance()
         self.network_access_manager.downloadProgress.connect(self.download_progress)
+        self.network_access_manager.authenticationRequired.connect(self.authenticate)
         self.connection = None
         self.feedback = feedback
         self.settings = Settings()
+        self.auth = 0
 
         self.network_access_manager.setTimeout(self.settings.get_timeout_sec() * 1000)
 
@@ -74,7 +77,10 @@ class HttpRestApi:
             url_query.setQuery(url_query_items)
 
         request = QNetworkRequest(url_query)
-        reply = self.network_access_manager.blockingGet(request, '', True, self.feedback)
+        if self.connection.auth_cfg != '':
+            request.setRawHeader("Accept".encode("utf-8"), "*/*".encode("utf-8"))
+
+        reply = self.network_access_manager.blockingGet(request, self.connection.auth_cfg, True, self.feedback)
         return self.process_qgs_reply(reply)
 
     def process_post_call(self, url, url_query_items, data, is_read_only=True):
@@ -97,12 +103,15 @@ class HttpRestApi:
             url_query.setQuery(url_query_items)
 
         # data_byte_array = json.dumps(data).encode('utf8')
-        # data = QtCore.QByteArray( json.dumps( json_request ) )  # https://www.programcreek.com/python/example/82673/PyQt4.QtNetwork.QNetworkRequest
+        # data = QtCore.QByteArray( json.dumps( json_request ) )
         data_byte_array = QJsonDocument.fromVariant(data)
 
         request = QNetworkRequest(url_query)
+        if self.connection.auth_cfg != '':
+            request.setRawHeader("Accept".encode("utf-8"), "*/*".encode("utf-8"))
         request.setHeader(QNetworkRequest.ContentTypeHeader, "application/json")
-        reply = self.network_access_manager.blockingPost(request, data_byte_array.toJson(), '', True, self.feedback)
+        reply = self.network_access_manager.blockingPost(request, data_byte_array.toJson(), self.connection.auth_cfg,
+                                                         True, self.feedback)
         return self.process_qgs_reply(reply)
 
     def process_put_call_using_requests(self, url, data=None):
@@ -162,6 +171,15 @@ class HttpRestApi:
         data_byte_array = QJsonDocument.fromVariant(data)
 
         request = QNetworkRequest(url_query)
+        if self.connection.auth_cfg != '':
+            self.auth = 0
+            config = QgsAuthMethodConfig()
+            QgsApplication.authManager().loadAuthenticationConfig(self.connection.auth_cfg, config, True)
+            concatenated = config.configMap()['username'] + ":" + config.configMap()['password']
+
+            data = base64.encodebytes(concatenated.encode("utf-8")).replace('\n'.encode("utf-8"), ''.encode("utf-8"))
+            request.setRawHeader("Authorization".encode("utf-8"), ("Basic %s" % data).encode("utf-8"))
+            request.setRawHeader("Accept".encode("utf-8"), "*/*".encode("utf-8"))
         loop = QEventLoop()  # https://stackoverflow.com/a/46514984
         reply = self.network_access_manager.put(request, data_byte_array.toJson())
         reply.finished.connect(loop.quit)
@@ -225,12 +243,40 @@ class HttpRestApi:
         self.report_info('DELETE ' + url_query.toString())
 
         request = QNetworkRequest(url_query)
+        if self.connection.auth_cfg != '':
+            self.auth = 0
+            config = QgsAuthMethodConfig()
+            QgsApplication.authManager().loadAuthenticationConfig(self.connection.auth_cfg, config, True)
+            concatenated = config.configMap()['username'] + ":" + config.configMap()['password']
+
+            data = base64.encodebytes(concatenated.encode("utf-8")).replace('\n'.encode("utf-8"), ''.encode("utf-8"))
+            request.setRawHeader("Authorization".encode("utf-8"), ("Basic %s" % data).encode("utf-8"))
+            request.setRawHeader("Accept".encode("utf-8"), "*/*".encode("utf-8"))
         loop = QEventLoop()
         reply = self.network_access_manager.deleteResource(request)
         reply.finished.connect(loop.quit)
         loop.exec_()
 
         return self.process_q_reply(reply)
+
+    def authenticate(self, reply, auth):
+        """
+        :param reply:
+        :param auth:
+        :return:
+        """
+
+        self.report_info('Authenticating...')
+        self.auth += 1
+        if self.auth >= 3:
+            reply.abort()
+
+        config = QgsAuthMethodConfig()
+        print('Authenticating with auth_cfg: >' + str(self.connection.auth_cfg) + '< from ' + str(self.connection))
+        QgsApplication.authManager().loadAuthenticationConfig(self.connection.auth_cfg, config, True)
+        if 'username' in config.configMap():
+            auth.setUser(config.configMap()['username'])
+            auth.setPassword(config.configMap()['password'])
 
     def update_progress(self, sent, total):
         if self.feedback:

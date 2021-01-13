@@ -186,10 +186,11 @@ class DownloadGraphVersionAlgorithm(QgsProcessingAlgorithm):
 
         feedback.setCurrentStep(1)
         if 'graphVersionMetadata' in response:
-            if response['graphVersionMetadata']['segmentsCount'] == 0:
-                feedback.reportError('No segments available', False)
-                return {self.OUTPUT_SEGMENT_COUNT: 0}
-            elif response['graphVersionMetadata']['state'] == 'DELETED':
+            # if response['graphVersionMetadata']['segmentsCount'] == 0:
+            #     feedback.reportError('No segments available', False)
+            #     return {self.OUTPUT_SEGMENT_COUNT: 0}
+            # elif response['graphVersionMetadata']['state'] == 'DELETED':
+            if response['graphVersionMetadata']['state'] == 'DELETED':
                 feedback.reportError('Graph version has been deleted', False)
                 return {self.OUTPUT_SEGMENT_COUNT: 0}
         elif 'error' in response:
@@ -260,7 +261,7 @@ class DownloadGraphVersionAlgorithm(QgsProcessingAlgorithm):
         attributes.append(QgsField('tunnel', QVariant.Bool, 'Boolean'))
         attributes.append(QgsField('bridge', QVariant.Bool, 'Boolean'))
         attributes.append(QgsField('urban', QVariant.Bool, 'Boolean'))
-        attributes.append(QgsField('length', QVariant.Double, 'Double'))
+        # attributes.append(QgsField('length', QVariant.Double, 'Double'))
         attributes.append(QgsField('tags', QVariant.String, 'String'))
         attributes.append(QgsField('connection', QVariant.String, 'String'))
         if layer_type == 'hdwaysegment' or layer_type == 'hdwaysegments':

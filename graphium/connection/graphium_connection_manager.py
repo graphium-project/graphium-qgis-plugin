@@ -66,9 +66,10 @@ class GraphiumConnectionManager:
                 self.connections.append(connection)
 
             else:
+                # TODO deprecated
                 if server_type is None or c[1] == server_type.value:
                     self.connections.append(Connection(c[0], GraphiumServerType(c[1]), c[2], c[3],
-                                                       c[4] if len(c) > 4 else '',
+                                                       c[4] if len(c) > 5 else '',
                                                        bool(c[5]) if len(c) > 5 else True))
         return self.connections
 

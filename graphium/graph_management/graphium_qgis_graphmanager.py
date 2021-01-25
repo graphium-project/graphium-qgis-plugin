@@ -142,16 +142,27 @@ class GraphiumQGISGraphManager:
         # noinspection PyTypeChecker,PyArgumentList,PyCallByClass
         return QCoreApplication.translate('GraphiumQGIS', message)
 
-    def read_connections(self, selected_index=-1):
+    def read_connections(self, selected_graph_server=None):
         # read connections and prepare connection combo box
         cbo_connection_items = list()
-        selected_graph_server = Settings.get_selected_graph_server()
-        for index, conn in enumerate(self.connection_manager.read_connections()):
-            cbo_connection_items.append(conn.name + ' (' + conn.get_connection_url() + ')')
+        selected_index = -1
+        if selected_graph_server is None:
+            selected_graph_server = Settings.get_selected_graph_server()
+
+        connections = self.connection_manager.read_connections()
+        connections = sorted(connections, key=lambda connection: connection.name.lower())
+
+        for index, conn in enumerate(connections):
+            cbo_connection_items.append({
+                'text': conn.name + ' (' + conn.get_connection_url() + ')',
+                'userdata': conn.name
+            })
             if selected_index == -1 and isinstance(selected_graph_server, str) and conn.name == selected_graph_server:
                 selected_index = index
         self.dlg.cboConnections.clear()
-        self.dlg.cboConnections.addItems(cbo_connection_items)
+        for cbo_item in cbo_connection_items:
+            self.dlg.cboConnections.addItem(cbo_item['text'], cbo_item['userdata'])
+
         if selected_index != -1:
             self.dlg.cboConnections.setCurrentIndex(selected_index)
 
@@ -163,37 +174,46 @@ class GraphiumQGISGraphManager:
             return False
 
     def new_connection(self):
-        selected_connection_index = self.dlg.cboConnections.currentIndex()
+        # selected_connection_index = self.dlg.cboConnections.currentIndex()
         new_connection = Connection()
         if self.open_connection_editor(new_connection):
             self.connection_manager.connections.append(new_connection)
-            selected_connection_index = len(self.connection_manager.connections) - 1
         self.connection_manager.save_connections()
-        self.read_connections(selected_connection_index)
+        self.read_connections(new_connection.name)
 
     def edit_connection(self):
-        selected_connection_index = self.dlg.cboConnections.currentIndex()
-        selected_connection = self.connection_manager.connections[selected_connection_index]
+        selected_connection_name = self.dlg.cboConnections.currentData()
+        selected_connection = self.connection_manager.select_graphium_server(selected_connection_name)
         self.open_connection_editor(selected_connection)
         self.connection_manager.save_connections()
-        self.read_connections(selected_connection_index)
+        self.read_connections(selected_connection.name)
 
     def remove_connection(self):
         reply = QMessageBox.question(self.dlg, 'Graphium', 'Do you really want to REMOVE the selected connection?',
                                                QMessageBox.Yes, QMessageBox.No)
         if reply == QMessageBox.Yes:
-            selected_connection_index = self.dlg.cboConnections.currentIndex()
+            connection_index, connection = self.read_current_connection()
+            selected_connection_index = connection_index
             del self.connection_manager.connections[selected_connection_index]
             self.connection_manager.save_connections()
             self.read_connections()
+
+    def read_current_connection(self):
+        selected_connection_name = self.dlg.cboConnections.currentData()
+        selected_connection = self.connection_manager.select_graphium_server(selected_connection_name)
+        connections = self.connection_manager.read_connections()
+        for index, connection in enumerate(connections):
+            if selected_connection.name == connection.name:
+                return index, selected_connection
+        return None
 
     def connect_to_graphium(self):
         if self.dlg.cboConnections.count() == 0:
             self.iface.messageBar().pushMessage("Graphium", "No Graphium server selected", level=Qgis.Critical)
             return
 
-        selected_connection_index = self.dlg.cboConnections.currentIndex()
-        self.selected_connection = self.connection_manager.connections[selected_connection_index]
+        selected_connection_name = self.dlg.cboConnections.currentData()
+        self.selected_connection = self.connection_manager.select_graphium_server(selected_connection_name)
 
         if self.graphium.connect(self.selected_connection):
             self.iface.messageBar().pushSuccess("Graphium", "Connected to Graphium server [" +
@@ -374,9 +394,10 @@ class GraphiumQGISGraphManager:
         Opens an algorithm dialog to add a new graph version
         """
         graph_name, graph_version = self.get_selected_graph_name_and_version(False)
+        connection_index, connection = self.read_current_connection()
 
         parameters = {
-            AddGraphVersionAlgorithm.SERVER_NAME: self.dlg.cboConnections.currentIndex(),
+            AddGraphVersionAlgorithm.SERVER_NAME: connection_index,
             AddGraphVersionAlgorithm.GRAPH_NAME: graph_name if graph_name else '',
             AddGraphVersionAlgorithm.GRAPH_VERSION: graph_version['version'] if graph_version else '',
             AddGraphVersionAlgorithm.OVERRIDE_IF_EXISTS: False
@@ -392,9 +413,10 @@ class GraphiumQGISGraphManager:
         Opens an algorithm dialog to add a new graph version from a GIP data source
         """
         graph_name, graph_version = self.get_selected_graph_name_and_version(False)
+        connection_index, connection = self.read_current_connection()
 
         parameters = {
-            AddGraphVersionAlgorithm.SERVER_NAME: self.dlg.cboConnections.currentIndex() + 1,
+            AddGraphVersionAlgorithm.SERVER_NAME: connection_index + 1,
             AddGraphVersionAlgorithm.GRAPH_NAME: graph_name if graph_name else '',
             AddGraphVersionAlgorithm.GRAPH_VERSION: graph_version['version'] if graph_version else '',
             AddGraphVersionAlgorithm.OVERRIDE_IF_EXISTS: False
@@ -410,9 +432,10 @@ class GraphiumQGISGraphManager:
         Opens an algorithm dialog to add a new graph version from a GIP data source
         """
         graph_name, graph_version = self.get_selected_graph_name_and_version(False)
+        connection_index, connection = self.read_current_connection()
 
         parameters = {
-            AddGraphVersionAlgorithm.SERVER_NAME: self.dlg.cboConnections.currentIndex() + 1,
+            AddGraphVersionAlgorithm.SERVER_NAME: connection_index + 1,
             AddGraphVersionAlgorithm.GRAPH_NAME: graph_name if graph_name else '',
             AddGraphVersionAlgorithm.GRAPH_VERSION: graph_version['version'] if graph_version else '',
             AddGraphVersionAlgorithm.OVERRIDE_IF_EXISTS: False
@@ -431,6 +454,7 @@ class GraphiumQGISGraphManager:
         graph_name, graph_version = self.get_selected_graph_name_and_version()
         if graph_version is None:
             return
+        connection_index, connection = self.read_current_connection()
 
         if graph_version['state'] != 'DELETED':
             reply = QMessageBox.question(self.dlg, 'Graphium',
@@ -438,7 +462,7 @@ class GraphiumQGISGraphManager:
                                                    QMessageBox.Yes, QMessageBox.No)
             if reply == QMessageBox.Yes:
                 parameters = {
-                    RemoveGraphVersionAlgorithm.SERVER_NAME: self.dlg.cboConnections.currentIndex(),
+                    RemoveGraphVersionAlgorithm.SERVER_NAME: connection_index,
                     RemoveGraphVersionAlgorithm.GRAPH_NAME: graph_name,
                     RemoveGraphVersionAlgorithm.GRAPH_VERSION: graph_version['version']
                 }
@@ -465,6 +489,8 @@ class GraphiumQGISGraphManager:
         if graph_version is None:
             return
 
+        connection_index, connection = self.read_current_connection()
+
         if graph_version['state'] == 'INITIAL':
             reply = QMessageBox.question(self.dlg,
                                                    'Graphium',
@@ -472,7 +498,7 @@ class GraphiumQGISGraphManager:
                                                    QMessageBox.Yes, QMessageBox.No)
             if reply == QMessageBox.Yes:
                 parameters = {
-                        ActivateGraphVersionAlgorithm.SERVER_NAME: self.dlg.cboConnections.currentIndex(),
+                        ActivateGraphVersionAlgorithm.SERVER_NAME: connection_index,
                         ActivateGraphVersionAlgorithm.GRAPH_NAME: graph_name,
                         ActivateGraphVersionAlgorithm.GRAPH_VERSION: graph_version['version']
                     }
@@ -492,8 +518,10 @@ class GraphiumQGISGraphManager:
     def update_graph_version_validity(self, graph_version, attribute, valid_date):
         selected_name = self.get_selected_graph_name()
 
+        connection_index, connection = self.read_current_connection()
+
         parameters = {
-            UpdateGraphVersionAttributeAlgorithm.SERVER_NAME: self.selected_connection.name,
+            UpdateGraphVersionAttributeAlgorithm.SERVER_NAME: connection_index,
             UpdateGraphVersionAttributeAlgorithm.GRAPH_NAME: selected_name,
             UpdateGraphVersionAttributeAlgorithm.GRAPH_VERSION: graph_version,
             UpdateGraphVersionAttributeAlgorithm.ATTRIBUTE: 0 if attribute == 'validFrom' else 1,
@@ -519,8 +547,10 @@ class GraphiumQGISGraphManager:
         if graph_version is None:
             return
 
+        connection_index, connection = self.read_current_connection()
+
         parameters = {
-                DownloadGraphVersionAlgorithm.SERVER_NAME: self.dlg.cboConnections.currentIndex(),
+                DownloadGraphVersionAlgorithm.SERVER_NAME: connection_index,
                 DownloadGraphVersionAlgorithm.GRAPH_NAME: graph_name,
                 DownloadGraphVersionAlgorithm.GRAPH_VERSION: graph_version['version']
             }

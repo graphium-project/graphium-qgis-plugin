@@ -265,7 +265,7 @@ class MapMatcherAlgorithm(QgsProcessingAlgorithm):
         vector_layer.startEditing()
         attributes = list()
         attributes.append(QgsField('order', QVariant.Int, 'Integer'))
-        attributes.append(QgsField('segmentId', QVariant.Int, 'Integer'))
+        attributes.append(QgsField('segmentId', QVariant.LongLong, 'Integer'))
         attributes.append(QgsField('startPointIndex', QVariant.Int, 'Integer'))
         attributes.append(QgsField('endPointIndex', QVariant.Int, 'Integer'))
         attributes.append(QgsField('enteringThroughStartNode', QVariant.Bool, 'String'))

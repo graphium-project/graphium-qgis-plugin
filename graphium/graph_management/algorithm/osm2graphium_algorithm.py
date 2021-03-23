@@ -194,8 +194,10 @@ class Osm2GraphiumAlgorithm(QgsProcessingAlgorithm):
                                                         self.tr('Override graph version if it exists on server'),
                                                         True, True))
 
+        output_dir = QSettings().value('plugin-graphium/osm2graphium_output_dir', '')
         self.addParameter(QgsProcessingParameterFile(self.OUTPUT_DIRECTORY, self.tr('Output directory'),
-                                                     QgsProcessingParameterFile.Folder, optional=False))
+                                                     QgsProcessingParameterFile.Folder, defaultValue=output_dir,
+                                                     optional=False))
 
     def checkParameterValues(self, parameters, context):
         ok, message = super(Osm2GraphiumAlgorithm, self).checkParameterValues(parameters, context)
@@ -237,6 +239,7 @@ class Osm2GraphiumAlgorithm(QgsProcessingAlgorithm):
 
         QSettings().setValue("plugin-graphium/java_exe", source_java)
         QSettings().setValue("plugin-graphium/osm2graphium_jar", source_osm2graphium)
+        QSettings().setValue("plugin-graphium/osm2graphium_output_dir", output_directory)
 
         server_name = self.server_name_options[server_name_index] if server_name_index > 0 else None
         selected_connection = None

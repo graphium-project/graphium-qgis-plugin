@@ -212,8 +212,10 @@ class Gip2GraphiumAlgorithm(QgsProcessingAlgorithm):
                                                         self.tr('Override graph version if it exists on server'),
                                                         True, True))
 
+        output_dir = QSettings().value('plugin-graphium/idf2graphium_output_dir', '')
         self.addParameter(QgsProcessingParameterFile(self.OUTPUT_DIRECTORY, self.tr('Output directory'),
-                                                     QgsProcessingParameterFile.Folder, optional=False))
+                                                     QgsProcessingParameterFile.Folder, defaultValue=output_dir,
+                                                     optional=False))
 
     def checkParameterValues(self, parameters, context):
         ok, message = super(Gip2GraphiumAlgorithm, self).checkParameterValues(parameters, context)
@@ -258,6 +260,7 @@ class Gip2GraphiumAlgorithm(QgsProcessingAlgorithm):
 
         QSettings().setValue("plugin-graphium/java_exe", source_java)
         QSettings().setValue("plugin-graphium/idf2graphium_jar", source_idf2graphium)
+        QSettings().setValue("plugin-graphium/idf2graphium_output_dir", output_directory)
 
         selected_connection = self.connection_manager.select_graphium_server(server_name)
 

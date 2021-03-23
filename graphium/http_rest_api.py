@@ -300,9 +300,11 @@ class HttpRestApi:
             if reply.hasRawHeader(header_content_type_label.encode('utf8')):
                 header_content_type_value = reply.rawHeader(header_content_type_label.encode('utf8')).data().decode(
                     'utf8')
-                content_type, charset = header_content_type_value.split(';')
-                content_type = content_type.strip()
-                charset = charset.strip().replace('-', '').lower()  # TODO use this (currently raises LookupError)
+                header_content_type = header_content_type_value.split(';')
+                content_type = header_content_type[0].strip()
+                if len(header_content_type) > 1:
+                    # TODO use this (currently raises LookupError)
+                    charset = header_content_type[1].strip().replace('-', '').lower()
             else:
                 content_type, charset = 'application/json', 'utf8'
             if content_type == 'application/json':
@@ -322,16 +324,22 @@ class HttpRestApi:
             return {"error": {"msg": '404 ContentNotFoundError'}}
         elif reply.error() == QNetworkReply.InternalServerError:
             return {"error": {"msg": '500 InternalServerError - ' + reply.errorString()}}
+        elif reply.error() == QNetworkReply.AuthenticationRequiredError:
+            return {"error": {"msg": 'AuthenticationRequiredError'}}
         else:
             return {"error": {"msg": reply.errorString()}}
 
     def report_error(self, message, fatal_error=False):
         if self.feedback is not None:
             self.feedback.reportError(message, fatal_error)
+        else:
+            print(message)
 
     def report_info(self, message):
         if self.feedback is not None:
             self.feedback.pushInfo(message)
+        else:
+            print(message)
 
     def connect(self, connection, check=True):
         if connection is None:

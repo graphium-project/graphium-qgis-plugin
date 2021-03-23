@@ -1,3 +1,23 @@
+v1.1 (2021-03-23)
+
+ * [Feature] Read-only flag for Graphium connections
+ * [Feature] Double click table to download graph version in manager
+ * [Feature] Include algorithm pointsToTrajectory
+ * [Feature] Add connection json string as attribute to output layer in download_graph_version_algorithm
+ * [Feature] Enable adding and removing hd graph versions (optional feature)
+ * [Feature] Enable downloading hd graph data (optional feature)
+ * [Feature] Set authentication for server connection (optional feature)
+ * [Improvement] Read metadata to detect graph type in add_graph_version_algorithm
+ * [Improvement] Save output direction in qgis settings in osm2graphium and gip2graphium
+ * [Improvement] Disable buttons that cannot be used before selecting graph name or version
+ * [Improvement] Sort connections in combo box by name in manager
+ * [Improvement] Double click to select graph name or download graph version in manager
+ * [Improvement] Add status code to error feedback in api
+ * [Fixed] Correct progress value in download_graph_version_algorithm
+ * [Fixed] long datatype for id/startNodeId/endNodeId in  download_graph_version_algorithm
+ * [Fixed] long datatype for segmentId in  download_graph_version_algorithm
+ * [Fixed] Remove unreliable segment count check in download_graph_version_algorithm 
+
 v1.0 (2020-07-08)
 
  * [Feature] New algorithm UpdateGraphVersionValidity

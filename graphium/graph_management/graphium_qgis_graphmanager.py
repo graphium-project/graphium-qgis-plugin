@@ -104,6 +104,8 @@ class GraphiumQGISGraphManager:
         self.dlg.btnSetDefaultGraphVersion.clicked.connect(self.set_default_graph_version)
         self.dlg.tableGraphVersions.doubleClicked.connect(self.download_graph_version_to_map)
 
+        self.dlg.btnManageSelectedGraphName.setEnabled(False)
+
         add_graph_name_menu = QMenu()
         add_graph_name_menu.addAction('Add ...', self.add_graph_version)
         add_graph_name_menu.addAction('Add from OSM', self.add_graph_version_from_osm)
@@ -114,6 +116,11 @@ class GraphiumQGISGraphManager:
         self.dlg.btnActivateGraphVersion.clicked.connect(self.activate_graph_version)
         self.dlg.btnDownloadGraphVersion.clicked.connect(self.download_graph_version_to_map)
         self.dlg.btnDeleteGraphVersion.clicked.connect(self.remove_graph_version)
+
+        self.dlg.btnSetDefaultGraphVersion.setEnabled(False)
+        self.dlg.btnActivateGraphVersion.setEnabled(False)
+        self.dlg.btnDownloadGraphVersion.setEnabled(False)
+        self.dlg.btnDeleteGraphVersion.setEnabled(False)
 
         self.dlg.chkFilterStateInitial.setChecked(True)
         self.dlg.chkFilterStateActive.setChecked(True)
@@ -233,6 +240,7 @@ class GraphiumQGISGraphManager:
 
         self.dlg.widgetGraphNames.show()
         self.dlg.widgetGraphVersions.hide()
+        self.dlg.btnManageSelectedGraphName.setEnabled(False)
 
         if self.selected_connection:
             self.dlg.widgetGraphNames.setEnabled(True)
@@ -283,6 +291,7 @@ class GraphiumQGISGraphManager:
         tm = TableGraphNameModel(self.table_graph_names_data, header)
         tm.default_graph_name_index = default_graph_name_index
         table_view.setModel(tm)
+        table_view.selectionModel().selectionChanged.connect(self.select_graph_name)
 
         # show grid
         table_view.setShowGrid(True)
@@ -308,6 +317,11 @@ class GraphiumQGISGraphManager:
         else:
             self.table_graph_names_data[graphname_index]['graph_version_count'] = len(response)
 
+    def select_graph_name(self):
+        selected_graph_name = self.get_selected_graph_name()
+        if selected_graph_name is not None:
+            self.dlg.btnManageSelectedGraphName.setEnabled(True)
+
     def switch_to_graph_version_view(self):
         """
         Reads the versions of the selected graph name and updates the graph version table in dialog
@@ -323,6 +337,11 @@ class GraphiumQGISGraphManager:
         self.dlg.widgetGraphNames.hide()
         self.dlg.widgetGraphVersions.show()
         self.dlg.lblSelectedGraphName.setText('Selected graph name: ' + selected_graph_name)
+
+        self.dlg.btnSetDefaultGraphVersion.setEnabled(False)
+        self.dlg.btnActivateGraphVersion.setEnabled(False)
+        self.dlg.btnDownloadGraphVersion.setEnabled(False)
+        self.dlg.btnDeleteGraphVersion.setEnabled(False)
 
         response = self.graphium.get_graph_versions(selected_graph_name)
         if 'error' in response:
@@ -367,6 +386,7 @@ class GraphiumQGISGraphManager:
         tm = TableGraphVersionModel(table_data, header, self.update_graph_version_validity, self)
         tm.default_graph_version_index = default_graph_version_index
         table_view.setModel(tm)
+        table_view.selectionModel().selectionChanged.connect(self.select_graph_version)
 
         # # https://gist.github.com/Riateche/5984815
         # for row in range(0, tm.rowCount()):
@@ -388,6 +408,14 @@ class GraphiumQGISGraphManager:
             table_view.setRowHeight(row, 20)
         # disable sorting
         table_view.setSortingEnabled(False)
+
+    def select_graph_version(self):
+        graph_name, graph_version = self.get_selected_graph_name_and_version(False)
+        if graph_version is not None:
+            self.dlg.btnSetDefaultGraphVersion.setEnabled(True)
+            self.dlg.btnActivateGraphVersion.setEnabled(True)
+            self.dlg.btnDownloadGraphVersion.setEnabled(True)
+            self.dlg.btnDeleteGraphVersion.setEnabled(True)
 
     def add_graph_version(self):
         """

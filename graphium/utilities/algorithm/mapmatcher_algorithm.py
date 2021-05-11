@@ -65,6 +65,7 @@ class MapMatcherAlgorithm(QgsProcessingAlgorithm):
         self.SERVER_NAME = 'SERVER_NAME'
         self.GRAPH_NAME = 'GRAPH_NAME'
         self.GRAPH_VERSION = 'GRAPH_VERSION'
+        self.ROUTING_MODE = 'ROUTING_MODE'
         self.OUTPUT_MATCHED_SEGMENTS = 'OUTPUT_MATCHED_SEGMENTS'
         self.OUTPUT_NR_OF_U_TURNS = 'OUTPUT_NR_OF_U_TURNS'
         self.OUTPUT_NR_OF_SHORTEST_PATH_SEARCHES = 'OUTPUT_NR_OF_SHORTEST_PATH_SEARCHES'
@@ -76,6 +77,8 @@ class MapMatcherAlgorithm(QgsProcessingAlgorithm):
         self.connection_manager = GraphiumConnectionManager()
         self.server_name_options = list()
         self.graph_version_options = ['VALID_AT_TIME_OF_TRAJECTORY', 'CURRENTLY_VALID']
+
+        self.routing_mode_options = ['car', 'bike']
 
     def createInstance(self):
         return MapMatcherAlgorithm()
@@ -142,6 +145,11 @@ class MapMatcherAlgorithm(QgsProcessingAlgorithm):
         self.addParameter(QgsProcessingParameterEnum(self.GRAPH_VERSION, self.tr('Graph version'),
                                                      self.graph_version_options, False, 0, False))
 
+        self.addParameter(QgsProcessingParameterEnum(self.ROUTING_MODE,
+                                                     self.tr('Select routing mode'),
+                                                     options=self.routing_mode_options,
+                                                     allowMultiple=False, defaultValue=0, optional=False))
+
         # We add a vector layer as output
         self.addParameter(QgsProcessingParameterFeatureSink(self.OUTPUT_MATCHED_SEGMENTS,
                                                             self.tr('Map matching output'),
@@ -166,6 +174,7 @@ class MapMatcherAlgorithm(QgsProcessingAlgorithm):
         server_name = self.server_name_options[self.parameterAsInt(parameters, self.SERVER_NAME, context)]
         graph_name = self.parameterAsString(parameters, self.GRAPH_NAME, context)
         graph_version = self.graph_version_options[self.parameterAsInt(parameters, self.GRAPH_VERSION, context)]
+        routing_mode = self.routing_mode_options[self.parameterAsInt(parameters, self.ROUTING_MODE, context)]
 
         if os.path.splitext(source)[-1].lower() == '.json':
             feedback.pushInfo('Load json track file')
@@ -202,7 +211,7 @@ class MapMatcherAlgorithm(QgsProcessingAlgorithm):
             return {self.OUTPUT_MATCHED_SEGMENTS: None}
 
         feedback.pushInfo("Start Map-Matching task on Graphium server '" + server_name + "' ...")
-        response = graphium.do_map_matching(track_data, graph_name, graph_version)
+        response = graphium.do_map_matching(track_data, graph_name, graph_version, routing_mode)
 
         # Process map matching result
         if 'segments' in response:

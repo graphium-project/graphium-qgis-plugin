@@ -43,7 +43,7 @@ class GraphiumUtilitiesApi(GraphiumApi):
     def __init__(self, feedback=None):
         super(GraphiumUtilitiesApi, self).__init__(feedback)
 
-    def do_map_matching(self, track, graph_name, graph_version):
+    def do_map_matching(self, track, graph_name, graph_version, routing_mode='car'):
         if self.connection is None:
             return {"error": {"msg": "No connection selected"}}
 
@@ -52,7 +52,7 @@ class GraphiumUtilitiesApi(GraphiumApi):
 
         url = self.connection.get_connection_url() + '/graphs/' + graph_name +\
               ("/versions/current" if graph_version == 'CURRENTLY_VALID' else '') + \
-              "/matchtrack?outputVerbose=true&timeoutMs=600000"
+              "/matchtrack?routingMode=" + routing_mode + "&outputVerbose=true&timeoutMs=600000"
 
         return self.process_post_call(url, None, track)
 

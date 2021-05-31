@@ -25,18 +25,19 @@
 
 import os
 import json
+import datetime
 # PyQt imports
-from qgis.PyQt.QtCore import QCoreApplication, QDateTime, QDate, QTime, QTimeZone
+from qgis.PyQt.QtCore import (QCoreApplication, QDateTime, QDate, QTime, QTimeZone, QVariant)
 from qgis.PyQt.QtGui import (QIcon)
 # qgis imports
-from qgis.core import (QgsProcessingParameterFeatureSource, QgsProcessingParameterFileDestination,
-                       QgsProcessingAlgorithm, QgsProcessingOutputNumber, QgsProcessing, QgsProcessingParameterField,
-                       QgsProcessingParameterNumber)
+from qgis.core import (QgsProcessingParameterFile, QgsProcessingParameterFeatureSink, QgsProcessingAlgorithm,
+                       QgsProcessingOutputNumber, QgsProcessing, QgsVectorLayer, QgsField, QgsFeature, QgsGeometry,
+                       QgsWkbTypes, QgsFeatureSink, QgsPoint, QgsCoordinateReferenceSystem, QgsFields)
 
 
-class PointsToTrajectoryAlgorithm(QgsProcessingAlgorithm):
+class TrajectoryToPointsAlgorithm(QgsProcessingAlgorithm):
     """
-    This algorithm is used to convert a layer with points to a Graphium trajectory (JSON).
+    This algorithm is used to convert a Graphium trajectory (JSON) to a point layer.
     """
 
     plugin_path = os.path.split(os.path.split(os.path.split(os.path.dirname(__file__))[0])[0])[0]
@@ -50,17 +51,15 @@ class PointsToTrajectoryAlgorithm(QgsProcessingAlgorithm):
 
         self.alg_group = "Utilities"
         self.alg_group_id = "graphutilities"
-        self.alg_name = "pointsToTrajectory"
-        self.alg_display_name = "Points to Trajectory Converter"
+        self.alg_name = "trajectoryToPoints"
+        self.alg_display_name = "Trajectory to Points Converter"
 
         self.INPUT = 'INPUT'
-        self.TRACK_ID = 'TRACK_ID'
-        self.TIMESTAMP_FIELD = 'TIMESTAMP_FIELD'
-        self.OUTPUT = 'OUTPUT'
+        self.OUTPUT_POINT_LAYER = 'OUTPUT'
         self.NUMBER_TRACK_POINTS = 'NUMBER_TRACK_POINTS'
 
     def createInstance(self):
-        return PointsToTrajectoryAlgorithm()
+        return TrajectoryToPointsAlgorithm()
 
     def group(self):
         return self.tr(self.alg_group)
@@ -75,7 +74,7 @@ class PointsToTrajectoryAlgorithm(QgsProcessingAlgorithm):
         return self.tr(self.alg_display_name)
 
     def shortHelpString(self):
-        return self.tr('This algorithm is used to convert a point layer to a Graphium trajectory (JSON).')
+        return self.tr('This algorithm is used to convert a Graphium trajectory (JSON) to a point layer.')
 
     def icon(self):
         return QIcon(os.path.join(self.plugin_path, 'icons/icon.svg'))
@@ -91,65 +90,50 @@ class PointsToTrajectoryAlgorithm(QgsProcessingAlgorithm):
         Definition of inputs and outputs of the algorithm, along with some other properties.
         """
 
-        self.addParameter(QgsProcessingParameterFeatureSource(self.INPUT, self.tr('Input point layer'),
-                                                              [QgsProcessing.TypeVectorPoint], None, False))
+        self.addParameter(QgsProcessingParameterFile(self.INPUT, self.tr('Input track file'),
+                                                     0, 'json', None, False))
 
-        self.addParameter(QgsProcessingParameterField(self.TIMESTAMP_FIELD, self.tr('Timestamp field'),
-                                                      parentLayerParameterName=self.INPUT,
-                                                      type=QgsProcessingParameterField.DateTime))
-
-        self.addParameter(QgsProcessingParameterNumber(self.TRACK_ID, self.tr('Track ID'),
-                                                       QgsProcessingParameterNumber.Integer, 0, False))
-
-        self.addParameter(QgsProcessingParameterFileDestination(self.OUTPUT, self.tr('JSON trajectory file'),
-                                                                'JSON files (*.json)', optional=True))
+        self.addParameter(QgsProcessingParameterFeatureSink(self.OUTPUT_POINT_LAYER, self.tr('Track point layer'),
+                                                            QgsProcessing.TypeVectorPoint))
 
         self.addOutput(QgsProcessingOutputNumber(self.NUMBER_TRACK_POINTS, self.tr('Number of track points')))
 
     def processAlgorithm(self, parameters, context, feedback):
-        source = self.parameterAsSource(parameters, self.INPUT, context)
-        timestamp_field = self.parameterAsString(parameters, self.TIMESTAMP_FIELD, context)
-        track_id = self.parameterAsInt(parameters, self.TRACK_ID, context)
-        json_file = self.parameterAsFileOutput(parameters, self.OUTPUT, context)
+        source = self.parameterAsFile(parameters, self.INPUT, context)
 
-        json_track = {'id': track_id, 'metadata': {'id': track_id}, 'trackPoints': list()}
+        with open(source) as json_data:
+            json_track = json.load(json_data)
 
-        meta_number_of_points = 0
-        meta_start_date = None
-        meta_end_date = None
-        meta_length = 0
+        if 'trackPoints' not in json_track:
+            return {
+                self.OUTPUT_MATCHED_SEGMENTS: None,
+                self.NUMBER_TRACK_POINTS: 0
+            }
 
-        base_timestamp = QDateTime(QDate(1970, 1, 1), QTime(0, 0, 0), QTimeZone.utc())
-        base_timestamp_sec = base_timestamp.toMSecsSinceEpoch()
+        vector_layer_fields = QgsFields()
+        vector_layer_fields.append(QgsField('timestamp', QVariant.DateTime, 'String'))
+        vector_layer_crs = QgsCoordinateReferenceSystem('EPSG:4326')
 
-        total = 100.0 / source.featureCount() if source.featureCount() else 0
-        for current, feature in enumerate(source.getFeatures()):
+        (sink, dest_id) = self.parameterAsSink(parameters, self.OUTPUT_POINT_LAYER, context, vector_layer_fields,
+                                               QgsWkbTypes.Point, vector_layer_crs)
 
-            # geometry = feature.geometry().asPoint()
+        total = 100.0 / len(json_track['trackPoints'])
+        for current, track_point in enumerate(json_track['trackPoints']):
+            if feedback.isCanceled():
+                break
+            feature = QgsFeature()
+            feature.setGeometry(QgsPoint(track_point['x'], track_point['y'], track_point['z']))
+            feature.setFields(vector_layer_fields, True)
+            timestamp_sec = track_point['timestamp']
+            timestamp = datetime.datetime.fromtimestamp(timestamp_sec / 1000)
+            feature.setAttribute('timestamp', str(timestamp))
 
-            feature_timestamp_sec = feature[timestamp_field].toMSecsSinceEpoch()
-            timestamp = int((feature_timestamp_sec - base_timestamp_sec))
-
-            meta_start_date = timestamp if meta_start_date is None else meta_start_date
-            meta_end_date = timestamp
-            meta_number_of_points += 1
-
-            json_track['trackPoints'].append({'timestamp': timestamp,
-                                              'x': feature.geometry().constGet().x(),
-                                              'y': feature.geometry().constGet().y(),
-                                              'z': feature.geometry().constGet().z()})
+            sink.addFeature(feature, QgsFeatureSink.FastInsert)
             feedback.setProgress(int(current * total))
 
-        json_track['metadata']['duration'] = meta_end_date - meta_start_date
-        json_track['metadata']['startDate'] = meta_start_date
-        json_track['metadata']['endDate'] = meta_end_date
-        json_track['metadata']['length'] = meta_length
-        json_track['metadata']['numberOfPoints'] = meta_number_of_points
-
-        with open(json_file, 'w') as output_file:
-            output_file.write(json.dumps(json_track))
+        feedback.pushInfo("Finished preparing vector layer " + dest_id)
 
         return {
-            self.OUTPUT: json_file,
-            self.NUMBER_TRACK_POINTS: meta_number_of_points
+            self.OUTPUT_POINT_LAYER: dest_id,
+            self.NUMBER_TRACK_POINTS: len(json_track['trackPoints'])
         }

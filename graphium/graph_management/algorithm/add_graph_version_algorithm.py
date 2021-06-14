@@ -141,6 +141,11 @@ class AddGraphVersionAlgorithm(QgsProcessingAlgorithm):
         graph_version = self.parameterAsString(parameters, self.GRAPH_VERSION, context)
         override_if_exists = self.parameterAsBool(parameters, self.OVERRIDE_IF_EXISTS, context)
 
+        if source_file != '':
+            if not os.path.isfile(source_file):
+                feedback.reportError('Cannot find input graph file!', True)
+                return dict()
+
         feedback.pushInfo("Connect to Graphium server '" + server_name + "' ...")
 
         graphium = GraphiumGraphManagementApi(feedback)

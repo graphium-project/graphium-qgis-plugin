@@ -202,6 +202,22 @@ class Osm2GraphiumAlgorithm(QgsProcessingAlgorithm):
     def checkParameterValues(self, parameters, context):
         ok, message = super(Osm2GraphiumAlgorithm, self).checkParameterValues(parameters, context)
         if ok:
+            source_java = self.parameterAsFile(parameters, self.INPUT_JAVA, context)
+            if source_java != '':
+                if not os.path.isfile(source_java):
+                    ok, message = False, 'Cannot find JRE file!'
+            source_osm2graphium = self.parameterAsFile(parameters, self.INPUT_OSM2GRAPHIUM, context)
+            if source_osm2graphium != '':
+                if not os.path.isfile(source_osm2graphium):
+                    ok, message = False, 'Cannot find OSM2Graphium converter file!'
+            source = self.parameterAsFile(parameters, self.INPUT, context)
+            if source != '':
+                if not os.path.isfile(source):
+                    ok, message = False, 'Cannot find OSM file!'
+            output_directory = self.parameterAsFileOutput(parameters, self.OUTPUT_DIRECTORY, context)
+            if output_directory != '':
+                if not os.path.isdir(output_directory):
+                    ok, message = False, 'Cannot find output directory!'
             valid_from = self.parameterAsString(parameters, self.VALID_FROM, context)
             if valid_from != '':
                 try:

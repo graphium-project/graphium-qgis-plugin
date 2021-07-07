@@ -134,10 +134,13 @@ class PointsToTrajectoryAlgorithm(QgsProcessingAlgorithm):
             meta_end_date = timestamp
             meta_number_of_points += 1
 
-            json_track['trackPoints'].append({'timestamp': timestamp,
-                                              'x': feature.geometry().constGet().x(),
-                                              'y': feature.geometry().constGet().y(),
-                                              'z': feature.geometry().constGet().z()})
+            track_point = {
+                'id': meta_number_of_points,
+                'timestamp': timestamp,
+                'x': feature.geometry().constGet().x(),
+                'y': feature.geometry().constGet().y(),
+                'z': feature.geometry().constGet().z()}
+            json_track['trackPoints'].append(track_point)
             feedback.setProgress(int(current * total))
 
         json_track['metadata']['duration'] = meta_end_date - meta_start_date

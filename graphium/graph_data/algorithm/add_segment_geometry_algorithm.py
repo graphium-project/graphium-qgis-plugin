@@ -149,7 +149,7 @@ class AddSegmentGeometryAlgorithm(QgsProcessingAlgorithm):
                                                  self.tr('Number of segments with geometry')))
 
     def processAlgorithm(self, parameters, context, model_feedback):
-        feedback = QgsProcessingMultiStepFeedback(3, model_feedback)
+        feedback = QgsProcessingMultiStepFeedback(2, model_feedback)
         source = self.parameterAsSource(parameters, self.INPUT, context)
         field_segment_id = self.parameterAsString(parameters, self.FIELD_SEGMENT_ID, context)
 
@@ -171,46 +171,46 @@ class AddSegmentGeometryAlgorithm(QgsProcessingAlgorithm):
             feedback.reportError('Cannot connect to Graphium', True)
             return {self.OUTPUT_SEGMENTS: None}
 
-        feedback.setCurrentStep(2)
         feedback.pushInfo("Start downloading task on Graphium server '" + server_name + "' ...")
 
-        features = source.getFeatures()
         total = 100.0 / source.featureCount() if source.featureCount() else 0
-
-        (sink, dest_id) = self.parameterAsSink(parameters, self.OUTPUT_SEGMENTS, context, source.fields(),
-                                               QgsWkbTypes.LineString, QgsCoordinateReferenceSystem('EPSG:4326'))
 
         segments_with_geometry = 0
 
-        for current, feature in enumerate(features):
+        # Read segment IDs
+        segment_ids = []
+        segment_geometries = dict()
+        for current, feature in enumerate(source.getFeatures()):
             # Stop the algorithm if cancel button has been clicked
             if feedback.isCanceled():
                 break
 
-            response = graphium.get_segment(graph_name, graph_version, feature[field_segment_id])
+            segment_ids.append(feature[field_segment_id])
+            if len(segment_ids) > 50:
+                self.get_segment_geometries(feedback, graphium, graph_name, graph_version, segment_ids,
+                                            segment_geometries)
+            # Update the progress bar
+            feedback.setProgress(int(current * total))
+        if len(segment_ids) > 0:
+            self.get_segment_geometries(feedback, graphium, graph_name, graph_version, segment_ids,
+                                        segment_geometries)
 
-            if 'waysegment' in response:
-                if len(response['waysegment']) == 1:
-                    new_geometry = QgsGeometry.fromWkt(response['waysegment'][0]['geometry'])
-                    if new_geometry is not None:
-                        feature.setGeometry(new_geometry)
-                        segments_with_geometry += 1
-                    else:
-                        feedback.reportError('Cannot parse WKT geometry', True)
-                else:
-                    feedback.reportError('More than one segment', True)
+        feedback.setCurrentStep(1)
+        feedback.pushInfo("Add geometries to segments")
 
-            elif 'error' in response:
-                if 'msg' in response['error']:
-                    feedback.reportError(response['error']['msg'], True)
+        (sink, dest_id) = self.parameterAsSink(parameters, self.OUTPUT_SEGMENTS, context, source.fields(),
+                                               QgsWkbTypes.LineString, QgsCoordinateReferenceSystem('EPSG:4326'))
+
+        for current, feature in enumerate(source.getFeatures()):
+            # Stop the algorithm if cancel button has been clicked
+            if feedback.isCanceled():
+                break
+
+            if int(feature[field_segment_id]) in segment_geometries:
+                feature.setGeometry(segment_geometries[int(feature[field_segment_id])])
+                segments_with_geometry += 1
             else:
-                if 'graphVersionMetadata' in response:
-                    if response['graphVersionMetadata']['state'] == 'DELETED':
-                        feedback.reportError('Graph version has been deleted', False)
-                    else:
-                        feedback.reportError('Segment ' + str(feature[field_segment_id]) + ' not found', False)
-                else:
-                    feedback.reportError('Unknown error', True)
+                feedback.pushInfo("No geometry for segment " + str(feature[field_segment_id]))
 
             sink.addFeature(feature, QgsFeatureSink.FastInsert)
 
@@ -224,3 +224,31 @@ class AddSegmentGeometryAlgorithm(QgsProcessingAlgorithm):
             self.OUTPUT_SEGMENT_COUNT: source.featureCount() if source.featureCount() else 0,
             self.OUTPUT_SEGMENT_WITH_GEOMETRY_COUNT: segments_with_geometry
         }
+
+    def get_segment_geometries(self, feedback, graphium, graph_name, graph_version, segment_ids, segment_geometries):
+
+        response = graphium.get_segment(graph_name, graph_version, ",".join([str(s) for s in segment_ids]))
+        if 'waysegment' in response:
+            if len(response['waysegment']) >= 1:
+                for segment in response['waysegment']:
+                    new_geometry = QgsGeometry.fromWkt(segment['geometry'])
+                    if new_geometry is not None:
+                        segment_geometries[segment['id']] = new_geometry
+                    else:
+                        feedback.reportError('Cannot parse WKT geometry', True)
+            else:
+                feedback.reportError('More than one segment', True)
+
+        elif 'error' in response:
+            if 'msg' in response['error']:
+                feedback.reportError(response['error']['msg'], True)
+        else:
+            if 'graphVersionMetadata' in response:
+                if response['graphVersionMetadata']['state'] == 'DELETED':
+                    feedback.reportError('Graph version has been deleted', False)
+                else:
+                    feedback.reportError('Segment ' + str(segment_ids[0]) + ' not found', False)
+            else:
+                feedback.reportError('Unknown error', True)
+
+        segment_ids.clear()

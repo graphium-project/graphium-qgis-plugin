@@ -1,3 +1,15 @@
+v1.2 (2021-xx-xx)
+ * [Feature] [manager] Added graph name task menu button
+ * [Feature] [manager] Added graph version task menu button
+ * [Feature] [utility] New algorithm Trajectory to Points Converter
+ * [Feature] [utility] New parameter routing_mode in mapmatching algorithm 
+ * [Improvement] [manager] Activate graph version moved to task menu button
+ * [Improvement] [manager] Delete graph version moved to task menu button
+ * [Improvement] [graph_data] Friendly error message if input file is missing at graph import
+ * [Improvement] [graph_data] Faster AddSegmentGeometry algorithm as batches are created instead of single requests
+ * [Improvement] [utility] Correctly calculate track duration in gpx2json algorithm
+ * [Improvement] [utility] Add track point id to JSON output of PointsToTrajectory algorithm
+
 v1.1 (2021-03-23)
 
  * [Feature] Read-only flag for Graphium connections

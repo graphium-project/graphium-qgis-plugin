@@ -131,7 +131,6 @@ class TrackGpx2JsonAlgorithm(QgsProcessingAlgorithm):
             namespace = {'gpx': uri}
 
         meta_number_of_points = 0
-        meta_duration = 0
         meta_start_date = None
         meta_end_date = None
         meta_length = 0
@@ -186,7 +185,7 @@ class TrackGpx2JsonAlgorithm(QgsProcessingAlgorithm):
                                                       'z': 0.0})
                     feedback.setProgress(int(current * total))
 
-            json_track['metadata']['duration'] = meta_duration
+            json_track['metadata']['duration'] = meta_end_date - meta_start_date
             json_track['metadata']['startDate'] = meta_start_date
             json_track['metadata']['endDate'] = meta_end_date
             json_track['metadata']['length'] = meta_length

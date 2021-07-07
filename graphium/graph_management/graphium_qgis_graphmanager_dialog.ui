@@ -175,9 +175,9 @@
          <item>
           <layout class="QHBoxLayout" name="layoutGraphNameToolsBottom">
            <item>
-            <widget class="QPushButton" name="btnManageSelectedGraphName">
+            <widget class="QPushButton" name="btnAddGraphName">
              <property name="text">
-              <string>Manage selected graph name</string>
+              <string>Add...</string>
              </property>
             </widget>
            </item>
@@ -195,9 +195,16 @@
             </spacer>
            </item>
            <item>
-            <widget class="QPushButton" name="btnAddGraphName">
+            <widget class="QPushButton" name="btnManageSelectedGraphName">
              <property name="text">
-              <string>Add...</string>
+              <string>Manage selected graph name</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="btnGraphNameTasks">
+             <property name="text">
+              <string>Tasks</string>
              </property>
             </widget>
            </item>
@@ -347,9 +354,9 @@
          <item>
           <layout class="QHBoxLayout" name="layoutGraphVersionToolsBottom">
            <item>
-            <widget class="QPushButton" name="btnSetDefaultGraphVersion">
+            <widget class="QPushButton" name="btnAddGraphVersion">
              <property name="text">
-              <string>Set as default</string>
+              <string>Add...</string>
              </property>
             </widget>
            </item>
@@ -367,16 +374,9 @@
             </spacer>
            </item>
            <item>
-            <widget class="QPushButton" name="btnAddGraphVersion">
+            <widget class="QPushButton" name="btnSetDefaultGraphVersion">
              <property name="text">
-              <string>Add...</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QPushButton" name="btnActivateGraphVersion">
-             <property name="text">
-              <string>Activate</string>
+              <string>Set as default</string>
              </property>
             </widget>
            </item>
@@ -388,9 +388,9 @@
             </widget>
            </item>
            <item>
-            <widget class="QPushButton" name="btnDeleteGraphVersion">
+            <widget class="QPushButton" name="btnGraphVersionTasks">
              <property name="text">
-              <string>Delete</string>
+              <string>Tasks</string>
              </property>
             </widget>
            </item>

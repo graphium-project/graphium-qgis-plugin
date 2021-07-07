@@ -97,14 +97,19 @@ class GraphiumQGISGraphManager:
 
         self.dlg.btnRefreshGraphNames.clicked.connect(self.switch_to_graph_name_view)
         self.dlg.btnManageSelectedGraphName.clicked.connect(self.switch_to_graph_version_view)
+        self.dlg.btnManageSelectedGraphName.setEnabled(False)
         self.dlg.tableGraphNames.doubleClicked.connect(self.switch_to_graph_version_view)
+
+        self.graph_name_task_menu = QMenu()
+        self.dlg.btnGraphNameTasks.setMenu(self.graph_name_task_menu)
+        self.dlg.btnGraphNameTasks.setEnabled(False)
+        self.dlg.btnGraphNameTasks.setVisible(False)
 
         self.dlg.btnHideGraphVersions.clicked.connect(self.switch_to_graph_name_view)
         self.dlg.btnRefreshGraphVersions.clicked.connect(self.switch_to_graph_version_view)
         self.dlg.btnSetDefaultGraphVersion.clicked.connect(self.set_default_graph_version)
+        self.dlg.btnDownloadGraphVersion.clicked.connect(self.download_graph_version_to_map)
         self.dlg.tableGraphVersions.doubleClicked.connect(self.download_graph_version_to_map)
-
-        self.dlg.btnManageSelectedGraphName.setEnabled(False)
 
         add_graph_name_menu = QMenu()
         add_graph_name_menu.addAction('Add ...', self.add_graph_version)
@@ -113,14 +118,20 @@ class GraphiumQGISGraphManager:
         self.dlg.btnAddGraphName.setMenu(add_graph_name_menu)
         self.dlg.btnAddGraphVersion.setMenu(add_graph_name_menu)
 
-        self.dlg.btnActivateGraphVersion.clicked.connect(self.activate_graph_version)
-        self.dlg.btnDownloadGraphVersion.clicked.connect(self.download_graph_version_to_map)
-        self.dlg.btnDeleteGraphVersion.clicked.connect(self.remove_graph_version)
+        self.graph_version_task_menu = QMenu()
+        self.dlg.btnGraphVersionTasks.setMenu(self.graph_version_task_menu)
+        self.register_graph_version_extension({
+            'name': 'Activate graph version',
+            'run_method': self.activate_graph_version
+        })
+        self.register_graph_version_extension({
+            'name': 'Delete graph version',
+            'run_method': self.remove_graph_version
+        })
 
         self.dlg.btnSetDefaultGraphVersion.setEnabled(False)
-        self.dlg.btnActivateGraphVersion.setEnabled(False)
         self.dlg.btnDownloadGraphVersion.setEnabled(False)
-        self.dlg.btnDeleteGraphVersion.setEnabled(False)
+        self.dlg.btnGraphVersionTasks.setEnabled(False)
 
         self.dlg.chkFilterStateInitial.setChecked(True)
         self.dlg.chkFilterStateActive.setChecked(True)
@@ -130,6 +141,8 @@ class GraphiumQGISGraphManager:
         self.dlg.chkFilterStateActive.toggled.connect(self.switch_to_graph_version_view)
         self.dlg.chkFilterStateDeleted.toggled.connect(self.switch_to_graph_version_view)
 
+        self.dlg.lblConnectedGraphServer.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        self.dlg.lblSelectedGraphName.setTextInteractionFlags(Qt.TextSelectableByMouse)
         self.dlg.lblDefaultGraphiumServer.setTextInteractionFlags(Qt.TextSelectableByMouse)
         self.dlg.lblDefaultGraphName.setTextInteractionFlags(Qt.TextSelectableByMouse)
         self.dlg.lblDefaultGraphVersion.setTextInteractionFlags(Qt.TextSelectableByMouse)
@@ -148,6 +161,14 @@ class GraphiumQGISGraphManager:
         """
         # noinspection PyTypeChecker,PyArgumentList,PyCallByClass
         return QCoreApplication.translate('GraphiumQGIS', message)
+
+    def register_graph_name_extension(self, extension):
+        self.graph_name_task_menu.addAction(extension['name'], extension['run_method'])
+        self.dlg.btnGraphNameTasks.setEnabled(True)
+        self.dlg.btnGraphNameTasks.setVisible(True)
+
+    def register_graph_version_extension(self, extension):
+        self.graph_version_task_menu.addAction(extension['name'], extension['run_method'])
 
     def read_connections(self, selected_graph_server=None):
         # read connections and prepare connection combo box
@@ -241,6 +262,7 @@ class GraphiumQGISGraphManager:
         self.dlg.widgetGraphNames.show()
         self.dlg.widgetGraphVersions.hide()
         self.dlg.btnManageSelectedGraphName.setEnabled(False)
+        self.dlg.btnGraphNameTasks.setEnabled(False)
 
         if self.selected_connection:
             self.dlg.widgetGraphNames.setEnabled(True)
@@ -321,6 +343,7 @@ class GraphiumQGISGraphManager:
         selected_graph_name = self.get_selected_graph_name()
         if selected_graph_name is not None:
             self.dlg.btnManageSelectedGraphName.setEnabled(True)
+            self.dlg.btnGraphNameTasks.setEnabled(True)
 
     def switch_to_graph_version_view(self):
         """
@@ -339,9 +362,8 @@ class GraphiumQGISGraphManager:
         self.dlg.lblSelectedGraphName.setText('Selected graph name: ' + selected_graph_name)
 
         self.dlg.btnSetDefaultGraphVersion.setEnabled(False)
-        self.dlg.btnActivateGraphVersion.setEnabled(False)
         self.dlg.btnDownloadGraphVersion.setEnabled(False)
-        self.dlg.btnDeleteGraphVersion.setEnabled(False)
+        self.dlg.btnGraphVersionTasks.setEnabled(False)
 
         response = self.graphium.get_graph_versions(selected_graph_name)
         if 'error' in response:
@@ -413,9 +435,8 @@ class GraphiumQGISGraphManager:
         graph_name, graph_version = self.get_selected_graph_name_and_version(False)
         if graph_version is not None:
             self.dlg.btnSetDefaultGraphVersion.setEnabled(True)
-            self.dlg.btnActivateGraphVersion.setEnabled(True)
             self.dlg.btnDownloadGraphVersion.setEnabled(True)
-            self.dlg.btnDeleteGraphVersion.setEnabled(True)
+            self.dlg.btnGraphVersionTasks.setEnabled(True)
 
     def add_graph_version(self):
         """

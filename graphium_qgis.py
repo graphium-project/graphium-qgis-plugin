@@ -72,6 +72,11 @@ class GraphiumQGIS:
         # processes
         self.provider = GraphiumProcessingProvider()
 
+        # child plugin extensions
+        self.graph_manager = None
+        self.graph_name_extensions = []
+        self.graph_version_extensions = []
+
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
         """Get the translation for a string using Qt translation API.
@@ -201,8 +206,12 @@ class GraphiumQGIS:
         QgsApplication.processingRegistry().removeProvider(self.provider)
 
     def run_graph_manager(self):
-        graph_manager = GraphiumQGISGraphManager(self.iface)
-        graph_manager.run()
+        self.graph_manager = GraphiumQGISGraphManager(self.iface)
+        for extension in self.graph_name_extensions:
+            self.graph_manager.register_graph_name_extension(extension)
+        for extension in self.graph_version_extensions:
+            self.graph_manager.register_graph_version_extension(extension)
+        self.graph_manager.run()
 
     def run_mapmatcher(self):
         # https://github.com/qgis/QGIS/blob/master/python/plugins/processing/tools/general.py

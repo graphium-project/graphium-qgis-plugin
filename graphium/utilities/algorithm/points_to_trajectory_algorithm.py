@@ -179,11 +179,15 @@ class PointsToTrajectoryAlgorithm(QgsProcessingAlgorithm):
 
             track_point = {
                 'id': meta_number_of_points,
-                't': timestamp,
+                'timestamp': timestamp,
                 'x': feature.geometry().constGet().x(),
-                'y': feature.geometry().constGet().y(),
-                'z': feature.geometry().constGet().z()}
+                'y': feature.geometry().constGet().y()
+            }
 
+            if feature.geometry().constGet().is3D():
+                track_point['z'] = feature.geometry().constGet().z()
+
+            length = 0.0
             if previous_feature:
                 length = GeomTools.distance(previous_feature.geometry().constGet(),
                                             feature.geometry().constGet(), source.sourceCrs())

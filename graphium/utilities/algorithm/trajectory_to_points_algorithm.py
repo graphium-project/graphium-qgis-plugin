@@ -111,7 +111,14 @@ class TrajectoryToPointsAlgorithm(QgsProcessingAlgorithm):
             }
 
         vector_layer_fields = QgsFields()
+        vector_layer_fields.append(QgsField('id', QVariant.Int, 'Integer'))
         vector_layer_fields.append(QgsField('timestamp', QVariant.DateTime, 'String'))
+        vector_layer_fields.append(QgsField('h', QVariant.Double, 'Double'))
+        vector_layer_fields.append(QgsField('distCalc', QVariant.Double, 'Double'))
+        vector_layer_fields.append(QgsField('vCalc', QVariant.Double, 'Double'))
+        vector_layer_fields.append(QgsField('durationCalc', QVariant.Double, 'Double'))
+        vector_layer_fields.append(QgsField('aCalc', QVariant.Double, 'Double'))
+        vector_layer_fields.append(QgsField('tags', QVariant.Map, 'JSON'))
         vector_layer_crs = QgsCoordinateReferenceSystem('EPSG:4326')
 
         (sink, dest_id) = self.parameterAsSink(parameters, self.OUTPUT_POINT_LAYER, context, vector_layer_fields,
@@ -122,11 +129,19 @@ class TrajectoryToPointsAlgorithm(QgsProcessingAlgorithm):
             if feedback.isCanceled():
                 break
             feature = QgsFeature()
-            feature.setGeometry(QgsPoint(track_point['x'], track_point['y'], track_point['z']))
+            if 'z' in track_point:
+                feature.setGeometry(QgsPoint(track_point['x'], track_point['y'], track_point['z']))
+            else:
+                feature.setGeometry(QgsPoint(track_point['x'], track_point['y']))
             feature.setFields(vector_layer_fields, True)
-            timestamp_sec = track_point['timestamp']
+            timestamp_sec = track_point['t']
             timestamp = datetime.datetime.fromtimestamp(timestamp_sec / 1000)
             feature.setAttribute('timestamp', str(timestamp))
+            feedback.pushInfo(str(track_point['id']))
+            for attribute in track_point:
+                if attribute != 'x' and attribute != 'y' and attribute != 'z' and attribute != 't':
+                    if track_point[attribute]:
+                        feature.setAttribute(attribute, str(track_point[attribute]))
 
             sink.addFeature(feature, QgsFeatureSink.FastInsert)
             feedback.setProgress(int(current * total))

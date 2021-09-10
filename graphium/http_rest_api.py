@@ -62,11 +62,12 @@ class HttpRestApi:
 
         self.network_access_manager.setTimeout(self.settings.get_timeout_sec() * 1000)
 
-    def process_get_call(self, url, url_query_items):
+    def process_get_call(self, url, url_query_items, timeout=None):
         """
         Run a GET request and return reply data
         :param url: url for request
         :param url_query_items:
+        :param timeout: in ms
         :return: response or error message in json format
         """
 
@@ -79,6 +80,8 @@ class HttpRestApi:
         request = QNetworkRequest(url_query)
         if self.connection.auth_cfg != '':
             request.setRawHeader("Accept".encode("utf-8"), "*/*".encode("utf-8"))
+        if timeout is not None:
+            request.setTransferTimeout(timeout)
 
         reply = self.network_access_manager.blockingGet(request, self.connection.auth_cfg, True, self.feedback)
         return self.process_qgs_reply(reply)

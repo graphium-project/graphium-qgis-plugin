@@ -59,7 +59,7 @@ class GraphiumApi(HttpRestApi):
 
     def check_connection(self):
         url = self.connection.get_connection_url() + '/status'
-        response = self.process_get_call(url, None)
+        response = self.process_get_call(url, None, 5000)
 
         if response.get('serverName'):
             return True
@@ -68,7 +68,7 @@ class GraphiumApi(HttpRestApi):
 
     def check_capability(self, capability):
         url = self.connection.get_connection_url() + '/capabilities'
-        response = self.process_get_call(url, None)
+        response = self.process_get_call(url, None, 5000)
 
         if "error" in response and response["error"]["msg"] == '404 ContentNotFoundError':
             self.report_info("Check capability not available on this server. Proceed with request...")

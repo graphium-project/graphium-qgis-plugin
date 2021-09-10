@@ -186,7 +186,7 @@ class MapMatcherAlgorithm(QgsProcessingAlgorithm):
                 output = processing.run("Graphium:gpx2jsonconverter", parameters={
                     'INPUT': source,
                     'OUTPUT': 'TEMPORARY_OUTPUT'
-                }, context=context, feedback=feedback)['OUTPUT']
+                }, is_child_algorithm=True, context=context, feedback=feedback)['OUTPUT']
                 with open(output) as json_data:
                     track_data = json.load(json_data)
             except QgsProcessingException as e:

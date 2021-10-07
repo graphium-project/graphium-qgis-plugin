@@ -47,7 +47,6 @@ class UpdateSegmentAttributeAlgorithm(QgsProcessingFeatureBasedAlgorithm):
     FIELD_SEGMENT_ID = 'FIELD_SEGMENT_ID'
     SEGMENT_ATTRIBUTE = 'SEGMENT_ATTRIBUTE'
     TARGET_FIELD = 'TARGET_FIELD'
-    VERTICES = 'VERTICES'
 
     def __init__(self):
         super().__init__()
@@ -77,7 +76,7 @@ class UpdateSegmentAttributeAlgorithm(QgsProcessingFeatureBasedAlgorithm):
         self.segment_attribute_options = ['name', 'startNodeIndex', 'startNodeId', 'endNodeIndex', 'endNodeId',
                                           'maxSpeedTow', 'maxSpeedBkw', 'calcSpeedTow', 'calcSpeedBkw',
                                           'lanesTow', 'lanesBkw', 'frc', 'formOfWay', 'accessTow', 'accessBkw',
-                                          'tunnel', 'bridge', 'urban', 'connection']
+                                          'tunnel', 'bridge', 'urban', 'connection', 'geometry']
 
         self.graphium = None
 
@@ -181,6 +180,9 @@ class UpdateSegmentAttributeAlgorithm(QgsProcessingFeatureBasedAlgorithm):
         return True
 
     def processFeature(self, feature, context, feedback):
+        if not feature[self.field_segment_id]:
+            return [feature]
+
         response = self.graphium.get_segment(self.graph_name, self.graph_version, feature[self.field_segment_id])
 
         if 'waysegment' in response:

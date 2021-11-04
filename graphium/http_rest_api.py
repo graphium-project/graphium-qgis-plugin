@@ -281,13 +281,20 @@ class HttpRestApi:
         :return:
         """
 
-        self.report_info('Authenticating...')
+        if not self.connection:
+            self.report_error("No connection set for authentication!")
+            reply.abort()
+
+        if self.connection.auth_cfg == '':
+            return
+
+        self.report_info('Authenticating connection \'' + self.connection.name + '\' with auth_cfg \'' +
+                         str(self.connection.auth_cfg) + '\'')
         self.auth += 1
         if self.auth >= 3:
             reply.abort()
 
         config = QgsAuthMethodConfig()
-        print('Authenticating with auth_cfg: >' + str(self.connection.auth_cfg) + '< from ' + str(self.connection))
         QgsApplication.authManager().loadAuthenticationConfig(self.connection.auth_cfg, config, True)
         if 'username' in config.configMap():
             auth.setUser(config.configMap()['username'])

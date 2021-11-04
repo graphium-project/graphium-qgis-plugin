@@ -62,17 +62,19 @@ class HttpRestApi:
 
         self.network_access_manager.setTimeout(self.settings.get_timeout_sec() * 1000)
 
-    def process_get_call(self, url, url_query_items, timeout=None):
+    def process_get_call(self, url, url_query_items, timeout=None, report_url=True):
         """
         Run a GET request and return reply data
         :param url: url for request
         :param url_query_items:
         :param timeout: in ms
+        :param report_url: True if URL should be reported to feedback
         :return: response or error message in json format
         """
 
         url_query = QUrl(url)
-        self.report_info('GET ' + url_query.toString())
+        if report_url:
+            self.report_info('GET ' + url_query.toString())
 
         if url_query_items:
             url_query.setQuery(url_query_items)
@@ -86,13 +88,14 @@ class HttpRestApi:
         reply = self.network_access_manager.blockingGet(request, self.connection.auth_cfg, True, self.feedback)
         return self.process_qgs_reply(reply)
 
-    def process_post_call(self, url, url_query_items, data, is_read_only=True):
+    def process_post_call(self, url, url_query_items, data, is_read_only=True, report_url=True):
         """
         Run a POST request and return reply data
         :param url: url for request
         :param url_query_items:
         :param data:
         :param is_read_only: True if the request does not update data
+        :param report_url: True if URL should be reported to feedback
         :return: response or error message in json format
         """
 
@@ -100,7 +103,8 @@ class HttpRestApi:
             return {"error": {"msg": "Graphium connection is set to read-only!"}}
 
         url_query = QUrl(url)
-        self.report_info('POST ' + url_query.toString())
+        if report_url:
+            self.report_info('POST ' + url_query.toString())
 
         if url_query_items:
             url_query.setQuery(url_query_items)
@@ -117,19 +121,21 @@ class HttpRestApi:
                                                          True, self.feedback)
         return self.process_qgs_reply(reply)
 
-    def process_put_call_using_requests(self, url, data=None):
+    def process_put_call_using_requests(self, url, data=None, report_url=True):
         """
         Deprecated
         Run a PUT request and return reply data
         :param url: url for request
         :param data:
+        :param report_url: True if URL should be reported to feedback
         :return: response or error message in json format
         """
 
         if self.connection.read_only:
             return {"error": {"msg": "Graphium connection is set to read-only!"}}
 
-        self.report_info('PUT ' + url)
+        if report_url:
+            self.report_info('PUT ' + url)
 
         try:
             response = requests.put(url)
@@ -157,11 +163,12 @@ class HttpRestApi:
                 self.report_error("JSON: %s" % str(response.text), True)
                 return {"error": {"msg": "JSON Decode Error"}}
 
-    def process_put_call(self, url, data=None):
+    def process_put_call(self, url, data=None, report_url=True):
         """
         Run a PUT request and return reply data
         :param url: url for request
         :param data:
+        :param report_url: True if URL should be reported to feedback
         :return: response or error message in json format
         """
 
@@ -169,7 +176,8 @@ class HttpRestApi:
             return {"error": {"msg": "Graphium connection is set to read-only!"}}
 
         url_query = QUrl(url)
-        self.report_info('PUT ' + url_query.toString())
+        if report_url:
+            self.report_info('PUT ' + url_query.toString())
 
         data_byte_array = QJsonDocument.fromVariant(data)
 
@@ -190,18 +198,20 @@ class HttpRestApi:
 
         return self.process_q_reply(reply)
 
-    def process_delete_call_using_requests(self, url):
+    def process_delete_call_using_requests(self, url, report_url=True):
         """
         Deprecated
         Run a DELETE request and return reply data
         :param url: url for request
+        :param report_url: True if URL should be reported to feedback
         :return: response or error message in json format
         """
 
         if self.connection.read_only:
             return {"error": {"msg": "Graphium connection is set to read-only!"}}
 
-        self.report_info('DELETE ' + url)
+        if report_url:
+            self.report_info('DELETE ' + url)
 
         try:
             response = requests.delete(url)
@@ -232,10 +242,11 @@ class HttpRestApi:
             else:
                 return {"error": {"msg": "No error but empty response"}}
 
-    def process_delete_call(self, url):
+    def process_delete_call(self, url, report_url=True):
         """
         Run a DELETE request and return reply data
         :param url: url for request
+        :param report_url: True if URL should be reported to feedback
         :return: response or error message in json format
         """
 
@@ -243,7 +254,8 @@ class HttpRestApi:
             return {"error": {"msg": "Graphium connection is set to read-only!"}}
 
         url_query = QUrl(url)
-        self.report_info('DELETE ' + url_query.toString())
+        if report_url:
+            self.report_info('DELETE ' + url_query.toString())
 
         request = QNetworkRequest(url_query)
         if self.connection.auth_cfg != '':

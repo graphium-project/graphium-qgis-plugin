@@ -53,7 +53,7 @@ class GraphiumGraphDataApi(GraphiumApi):
         url_query_items = QUrlQuery()
         url_query_items.addQueryItem('ids', str(segment_id))
 
-        return self.process_get_call(url, url_query_items)
+        return self.process_get_call(url, url_query_items, report_url=False)
 
     def export_graph(self, graph_name, graph_version, is_hd_segments=False):
         if self.connection is None:

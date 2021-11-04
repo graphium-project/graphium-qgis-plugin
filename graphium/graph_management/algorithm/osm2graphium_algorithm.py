@@ -40,7 +40,7 @@ from ...connection.graphium_connection_manager import GraphiumConnectionManager
 
 class Osm2GraphiumAlgorithm(QgsProcessingAlgorithm):
     """
-    This algorithm is used to convert a GIP.at graph file into Graphium JSON format.
+    This algorithm is used to convert a OpenStreetMap graph file into Graphium JSON format.
     """
 
     plugin_path = os.path.split(os.path.split(os.path.split(os.path.dirname(__file__))[0])[0])[0]

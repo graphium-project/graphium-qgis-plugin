@@ -82,7 +82,7 @@ class HttpRestApi:
         request = QNetworkRequest(url_query)
         if self.connection.auth_cfg != '':
             request.setRawHeader("Accept".encode("utf-8"), "*/*".encode("utf-8"))
-        if timeout is not None:
+        if timeout is not None and "setTransferTimeout" in dir(request):
             request.setTransferTimeout(timeout)
 
         reply = self.network_access_manager.blockingGet(request, self.connection.auth_cfg, True, self.feedback)

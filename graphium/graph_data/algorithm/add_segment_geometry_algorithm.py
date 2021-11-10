@@ -116,27 +116,27 @@ class AddSegmentGeometryAlgorithm(QgsProcessingAlgorithm):
 
         # read server connections and prepare enum items
         self.connection_options.clear()
-        selected_graph_server = Settings.get_selected_graph_server()
+        default_graph_server = Settings.get_selected_graph_server()
         selected_index = 0
         for index, connection in enumerate(self.connection_manager.read_connections()):
             self.connection_options.append(connection.name)
-            if selected_index == 0 and isinstance(selected_graph_server, str)\
-                    and connection.name == selected_graph_server:
+            if selected_index == 0 and isinstance(default_graph_server, str)\
+                    and connection.name == default_graph_server:
                 selected_index = index
         self.addParameter(QgsProcessingParameterEnum(self.SERVER_NAME, self.tr('Server name'),
                                                      self.connection_options, False, selected_index, False))
 
-        s = Settings.get_selected_graph_name()
+        default_graph_name = Settings.get_selected_graph_name()
         graph_name = ''
-        if isinstance(s, str):
-            graph_name = s
+        if isinstance(default_graph_name, str):
+            graph_name = default_graph_name
         self.addParameter(QgsProcessingParameterString(self.GRAPH_NAME, self.tr('Graph name'), graph_name,
                                                        False, False))
 
-        s = Settings.get_selected_graph_version()
+        default_graph_version = Settings.get_selected_graph_version()
         graph_version = ''
-        if isinstance(s, str):
-            graph_version = s
+        if isinstance(default_graph_version, str):
+            graph_version = default_graph_version
         self.addParameter(QgsProcessingParameterString(self.GRAPH_VERSION, self.tr('Graph version'), graph_version,
                                                        False, False))
 
@@ -237,7 +237,7 @@ class AddSegmentGeometryAlgorithm(QgsProcessingAlgorithm):
                     else:
                         feedback.reportError('Cannot parse WKT geometry', True)
             else:
-                feedback.reportError('More than one segment', True)
+                feedback.reportError('No segment available', True)
 
         elif 'error' in response:
             if 'msg' in response['error']:

@@ -168,7 +168,14 @@ class PointsToTrajectoryAlgorithm(QgsProcessingAlgorithm):
         total = 100.0 / source.featureCount() if source.featureCount() else 0
         for current, feature in enumerate(source.getFeatures()):
 
-            # geometry = feature.geometry().asPoint()
+            if not feature[timestamp_field]:
+                # Skip feature
+                # feedback.pushInfo("Timestamp not available. Point skipped.")
+                continue
+            if not feature.geometry():
+                # Skip feature
+                # feedback.pushInfo("Geometry not available. Point skipped.")
+                continue
 
             feature_timestamp_sec = feature[timestamp_field].toMSecsSinceEpoch()
             timestamp = int((feature_timestamp_sec - base_timestamp_sec))
@@ -204,7 +211,7 @@ class PointsToTrajectoryAlgorithm(QgsProcessingAlgorithm):
                                                                      previous_feature.geometry().constGet(),
                                                                      feature.geometry().constGet(),
                                                                      source.sourceCrs())
-                    track_point['durationCalc'] = timestamp - previous_track_point['t']
+                    track_point['durationCalc'] = timestamp - previous_track_point['timestamp']
                     if track_point['vCalc'] and previous_track_point['vCalc']:
                         track_point['aCalc'] = (track_point['vCalc'] / 3.6 - previous_track_point['vCalc'] / 3.6) /\
                                                (track_point['durationCalc'] / 1000)
@@ -233,7 +240,10 @@ class PointsToTrajectoryAlgorithm(QgsProcessingAlgorithm):
             previous_feature = feature
             previous_track_point = track_point
 
-        json_track['metadata']['duration'] = meta_end_date - meta_start_date
+        if meta_start_date and meta_end_date:
+            json_track['metadata']['duration'] = meta_end_date - meta_start_date
+        else:
+            json_track['metadata']['duration'] = None
         json_track['metadata']['startDate'] = meta_start_date
         json_track['metadata']['endDate'] = meta_end_date
         json_track['metadata']['length'] = meta_length

@@ -30,23 +30,27 @@ from PyQt5.QtGui import (QIcon)
 # qgis imports
 from qgis.PyQt.QtCore import QCoreApplication
 from qgis.core import (QgsProcessing, QgsProcessingParameterString, QgsProcessingParameterEnum,
-                       QgsProcessingFeatureBasedAlgorithm, QgsProcessingParameterField)
+                       QgsProcessingAlgorithm, QgsProcessingParameterField, QgsProcessingParameterFeatureSource,
+                       QgsProcessingParameterFeatureSink, QgsFeatureSink, QgsCoordinateReferenceSystem,
+                       QgsProcessingMultiStepFeedback)
 # plugin
 from ...graphium_graph_data_api import (GraphiumGraphDataApi)
 from ....graphium.connection.graphium_connection_manager import GraphiumConnectionManager
 from ....graphium.settings import Settings
 
 
-class UpdateSegmentAttributeAlgorithm(QgsProcessingFeatureBasedAlgorithm):
+class UpdateSegmentAttributeAlgorithm(QgsProcessingAlgorithm):
 
     plugin_path = os.path.split(os.path.split(os.path.split(os.path.dirname(__file__))[0])[0])[0]
 
+    INPUT = 'INPUT'
     SERVER_NAME = 'SERVER_NAME'
     GRAPH_NAME = 'GRAPH_NAME'
     GRAPH_VERSION = 'GRAPH_VERSION'
     FIELD_SEGMENT_ID = 'FIELD_SEGMENT_ID'
     SEGMENT_ATTRIBUTE = 'SEGMENT_ATTRIBUTE'
     TARGET_FIELD = 'TARGET_FIELD'
+    OUTPUT = 'OUTPUT'
 
     def __init__(self):
         super().__init__()
@@ -77,8 +81,6 @@ class UpdateSegmentAttributeAlgorithm(QgsProcessingFeatureBasedAlgorithm):
                                           'maxSpeedTow', 'maxSpeedBkw', 'calcSpeedTow', 'calcSpeedBkw',
                                           'lanesTow', 'lanesBkw', 'frc', 'formOfWay', 'accessTow', 'accessBkw',
                                           'tunnel', 'bridge', 'urban', 'connection', 'geometry']
-
-        self.graphium = None
 
     def createInstance(self):
         return UpdateSegmentAttributeAlgorithm()
@@ -113,13 +115,13 @@ class UpdateSegmentAttributeAlgorithm(QgsProcessingFeatureBasedAlgorithm):
     def outputName(self):
         return self.tr('Segments with updated attribute')
 
-    def inputLayerTypes(self):
-        return [QgsProcessing.TypeVector]
-
-    def initParameters(self, config=None):
+    def initAlgorithm(self, config=None):
         """
         Definition of inputs and outputs of the algorithm, along with some other properties.
         """
+
+        self.addParameter(QgsProcessingParameterFeatureSource(self.INPUT, self.tr('Input layer'),
+                                                              [QgsProcessing.TypeVector], None, False))
 
         self.addParameter(QgsProcessingParameterField(self.FIELD_SEGMENT_ID, self.tr('Segment ID field'),
                                                       'segment_id', 'INPUT'))
@@ -154,53 +156,117 @@ class UpdateSegmentAttributeAlgorithm(QgsProcessingFeatureBasedAlgorithm):
         self.addParameter(QgsProcessingParameterString(self.GRAPH_VERSION, self.tr('Graph version'), graph_version,
                                                        False, False))
 
-    def prepareAlgorithm(self, parameters, context, feedback):
-        self.field_segment_id = self.parameterAsString(parameters, self.FIELD_SEGMENT_ID, context)
+        # We add a vector layer as output
+        self.addParameter(QgsProcessingParameterFeatureSink(self.OUTPUT, self.tr('Output'),
+                                                            QgsProcessing.TypeVector))
+
+    def processAlgorithm(self, parameters, context, model_feedback):
+        feedback = QgsProcessingMultiStepFeedback(2, model_feedback)
+
+        source = self.parameterAsSource(parameters, self.INPUT, context)
+        field_segment_id = self.parameterAsString(parameters, self.FIELD_SEGMENT_ID, context)
         segment_attribute_index = self.parameterAsInt(parameters, self.SEGMENT_ATTRIBUTE, context)
-        self.segment_attribute = self.segment_attribute_options[segment_attribute_index]
-        self.target_field = self.parameterAsString(parameters, self.TARGET_FIELD, context)
+        segment_attribute = self.segment_attribute_options[segment_attribute_index]
+        target_field = self.parameterAsString(parameters, self.TARGET_FIELD, context)
 
         server_name = self.connection_options[self.parameterAsInt(parameters, self.SERVER_NAME, context)]
-        self.graph_name = self.parameterAsString(parameters, self.GRAPH_NAME, context)
-        self.graph_version = self.parameterAsString(parameters, self.GRAPH_VERSION, context)
+        graph_name = self.parameterAsString(parameters, self.GRAPH_NAME, context)
+        graph_version = self.parameterAsString(parameters, self.GRAPH_VERSION, context)
 
         feedback.pushInfo("Connect to Graphium server '" + server_name + "' ...")
 
-        self.graphium = GraphiumGraphDataApi(feedback)
+        graphium = GraphiumGraphDataApi(feedback)
         selected_connection = self.connection_manager.select_graphium_server(server_name)
 
         if selected_connection is None:
             feedback.reportError('Cannot select connection to Graphium', True)
-            return False
+            return {self.OUTPUT: None}
 
-        if self.graphium.connect(selected_connection) is False:
-            feedback.reportError('Cannot connect to Graphium', True)
-            return False
+        if graphium.connect(selected_connection) is False:
+            feedback.reportError('Cannot connect to [' + server_name + ']', True)
+            return {self.OUTPUT: None}
 
-        return True
+        feedback.pushInfo("Start downloading task on Graphium server '" + server_name + "' ...")
 
-    def processFeature(self, feature, context, feedback):
-        if not feature[self.field_segment_id]:
-            return [feature]
+        total = 100.0 / source.featureCount() if source.featureCount() else 0
 
-        response = self.graphium.get_segment(self.graph_name, self.graph_version, feature[self.field_segment_id])
+        # Read segment IDs
+        segment_ids = []
+        attributes_per_segment = dict()
+        for current, feature in enumerate(source.getFeatures()):
+            # Stop the algorithm if cancel button has been clicked
+            if feedback.isCanceled():
+                break
 
-        if 'waysegment' in response:
-            if len(response['waysegment']) == 1:
-                if self.segment_attribute in ['accessTow', 'accessBkw', 'connection']:
-                    feature[self.target_field] = json.dumps(response['waysegment'][0][self.segment_attribute])
+            if not feature[field_segment_id]:
+                continue
+
+            if not feature[field_segment_id] in segment_ids:
+                segment_ids.append(feature[field_segment_id])
+            if len(segment_ids) > 50:
+                self.get_segment_attributes(feedback, graphium, graph_name, graph_version, segment_attribute,
+                                            segment_ids, attributes_per_segment)
+            # Update the progress bar
+            feedback.setProgress(int(current * total))
+        if len(segment_ids) > 0:
+            self.get_segment_attributes(feedback, graphium, graph_name, graph_version, segment_attribute,
+                                        segment_ids, attributes_per_segment)
+
+        feedback.setCurrentStep(1)
+        feedback.pushInfo("Add attributes to features")
+
+        (sink, dest_id) = self.parameterAsSink(parameters, self.OUTPUT, context, source.fields(),
+                                               source.wkbType(), source.sourceCrs())
+
+        for current, feature in enumerate(source.getFeatures()):
+            # Stop the algorithm if cancel button has been clicked
+            if feedback.isCanceled():
+                break
+
+            if feature[field_segment_id]:
+                if int(feature[field_segment_id]) in attributes_per_segment:
+                    feature[target_field] = attributes_per_segment[int(feature[field_segment_id])]
                 else:
-                    feature[self.target_field] = response['waysegment'][0][self.segment_attribute]
+                    feedback.pushInfo("No attribute for segment " + str(feature[field_segment_id]))
+
+            sink.addFeature(feature, QgsFeatureSink.FastInsert)
+
+            # Update the progress bar
+            feedback.setProgress(int(current * total))
+
+        feedback.setProgress(100)
+
+        return {
+            self.OUTPUT: dest_id
+        }
+
+        # if 'waysegment' in response:
+        #     if len(response['waysegment']) == 1:
+        #         if self.segment_attribute in ['accessTow', 'accessBkw', 'connection']:
+        #             feature[self.target_field] = json.dumps(response['waysegment'][0][self.segment_attribute])
+        #         else:
+        #             feature[self.target_field] = response['waysegment'][0][self.segment_attribute]
+
+    def get_segment_attributes(self, feedback, graphium, graph_name, graph_version, attribute, segment_ids, attributes):
+
+        response = graphium.get_segment(graph_name, graph_version, ",".join([str(s) for s in segment_ids]))
+        if 'waysegment' in response:
+            if len(response['waysegment']) >= 1:
+                for segment in response['waysegment']:
+                    attributes[segment['id']] = segment[attribute]
+            else:
+                feedback.reportError('No segment available', True)
 
         elif 'error' in response:
             if 'msg' in response['error']:
                 feedback.reportError(response['error']['msg'], True)
-        elif 'graphVersionMetadata' in response:
-            if response['graphVersionMetadata']['state'] == 'DELETED':
-                feedback.reportError('Graph version has been deleted', False)
-            else:
-                feedback.reportError('Segment ' + str(feature[self.field_segment_id]) + ' not found', False)
         else:
-            feedback.reportError('Unknown error', True)
+            if 'graphVersionMetadata' in response:
+                if response['graphVersionMetadata']['state'] == 'DELETED':
+                    feedback.reportError('Graph version has been deleted', False)
+                else:
+                    feedback.reportError('Segment ' + str(segment_ids[0]) + ' not found', False)
+            else:
+                feedback.reportError('Unknown error', True)
 
-        return [feature]
+        segment_ids.clear()

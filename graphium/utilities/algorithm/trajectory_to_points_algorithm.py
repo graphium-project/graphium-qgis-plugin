@@ -32,7 +32,8 @@ from qgis.PyQt.QtGui import (QIcon)
 # qgis imports
 from qgis.core import (QgsProcessingParameterFile, QgsProcessingParameterFeatureSink, QgsProcessingAlgorithm,
                        QgsProcessingOutputNumber, QgsProcessing, QgsVectorLayer, QgsField, QgsFeature, QgsGeometry,
-                       QgsWkbTypes, QgsFeatureSink, QgsPoint, QgsCoordinateReferenceSystem, QgsFields)
+                       QgsWkbTypes, QgsFeatureSink, QgsPoint, QgsCoordinateReferenceSystem, QgsFields,
+                       QgsProcessingParameterBoolean)
 
 
 class TrajectoryToPointsAlgorithm(QgsProcessingAlgorithm):
@@ -55,6 +56,7 @@ class TrajectoryToPointsAlgorithm(QgsProcessingAlgorithm):
         self.alg_display_name = "Trajectory to Points Converter"
 
         self.INPUT = 'INPUT'
+        self.ADD_HEADER_ATTRIBUTES = 'ADD_HEADER_ATTRIBUTES'
         self.OUTPUT_POINT_LAYER = 'OUTPUT'
         self.NUMBER_TRACK_POINTS = 'NUMBER_TRACK_POINTS'
 
@@ -93,6 +95,10 @@ class TrajectoryToPointsAlgorithm(QgsProcessingAlgorithm):
         self.addParameter(QgsProcessingParameterFile(self.INPUT, self.tr('Input track file'),
                                                      0, 'json', None, False))
 
+        self.addParameter(QgsProcessingParameterBoolean(self.ADD_HEADER_ATTRIBUTES,
+                                                        self.tr('Add header attributes to points'),
+                                                        False, True))
+
         self.addParameter(QgsProcessingParameterFeatureSink(self.OUTPUT_POINT_LAYER, self.tr('Track point layer'),
                                                             QgsProcessing.TypeVectorPoint))
 
@@ -100,6 +106,7 @@ class TrajectoryToPointsAlgorithm(QgsProcessingAlgorithm):
 
     def processAlgorithm(self, parameters, context, feedback):
         source = self.parameterAsFile(parameters, self.INPUT, context)
+        add_header_attributes = self.parameterAsBoolean(parameters, self.ADD_HEADER_ATTRIBUTES, context)
 
         with open(source) as json_data:
             json_track = json.load(json_data)
@@ -111,6 +118,8 @@ class TrajectoryToPointsAlgorithm(QgsProcessingAlgorithm):
             }
 
         vector_layer_fields = QgsFields()
+        if add_header_attributes:
+            vector_layer_fields.append(QgsField('track_id', QVariant.LongLong, 'Integer'))
         vector_layer_fields.append(QgsField('id', QVariant.Int, 'Integer'))
         vector_layer_fields.append(QgsField('timestamp', QVariant.DateTime, 'String'))
         vector_layer_fields.append(QgsField('h', QVariant.Double, 'Double'))
@@ -118,12 +127,21 @@ class TrajectoryToPointsAlgorithm(QgsProcessingAlgorithm):
         vector_layer_fields.append(QgsField('vCalc', QVariant.Double, 'Double'))
         vector_layer_fields.append(QgsField('durationCalc', QVariant.Double, 'Double'))
         vector_layer_fields.append(QgsField('aCalc', QVariant.Double, 'Double'))
-        vector_layer_fields.append(QgsField('tags', QVariant.Map, 'JSON'))
-        vector_layer_crs = QgsCoordinateReferenceSystem('EPSG:4326')
+        vector_layer_fields.append(QgsField('tags', QVariant.String, 'String'))
+        # vector_layer_fields.append(QgsField('tags', QVariant.Map, 'JSON'))  # TODO add as JSON object
+        if add_header_attributes:
+            vector_layer_fields.append(QgsField('metadataStartDate', QVariant.DateTime, 'String'))
+            vector_layer_fields.append(QgsField('metadataEndDate', QVariant.DateTime, 'String'))
+            vector_layer_fields.append(QgsField('metadataDuration', QVariant.LongLong, 'Integer'))
+            vector_layer_fields.append(QgsField('metadataLength', QVariant.Double, 'Double'))
+            vector_layer_fields.append(QgsField('metadataNumberOfPoints', QVariant.Int, 'Integer'))
+            vector_layer_fields.append(QgsField('metadataTags', QVariant.String, 'String'))
+            # vector_layer_fields.append(QgsField('metadataTags', QVariant.Map, 'JSON'))  # TODO add as JSON object
 
         (sink, dest_id) = self.parameterAsSink(parameters, self.OUTPUT_POINT_LAYER, context, vector_layer_fields,
-                                               QgsWkbTypes.Point, vector_layer_crs)
+                                               QgsWkbTypes.Point, QgsCoordinateReferenceSystem('EPSG:4326'))
 
+        metadata_tags = json_track['metadata']['tags'] if 'tags' in json_track['metadata'] else None
         total = 100.0 / len(json_track['trackPoints'])
         for current, track_point in enumerate(json_track['trackPoints']):
             if feedback.isCanceled():
@@ -133,15 +151,28 @@ class TrajectoryToPointsAlgorithm(QgsProcessingAlgorithm):
                 feature.setGeometry(QgsPoint(track_point['x'], track_point['y'], track_point['z']))
             else:
                 feature.setGeometry(QgsPoint(track_point['x'], track_point['y']))
+
             feature.setFields(vector_layer_fields, True)
-            timestamp_sec = track_point['t']
-            timestamp = datetime.datetime.fromtimestamp(timestamp_sec / 1000)
+            timestamp_ms = track_point['timestamp'] if 'timestamp' in track_point else track_point['t']
+            timestamp = datetime.datetime.fromtimestamp(timestamp_ms / 1000)
             feature.setAttribute('timestamp', str(timestamp))
-            feedback.pushInfo(str(track_point['id']))
+
             for attribute in track_point:
-                if attribute != 'x' and attribute != 'y' and attribute != 'z' and attribute != 't':
+                if attribute not in ['x', 'y', 'z', 't', 'timestamp']:
                     if track_point[attribute]:
                         feature.setAttribute(attribute, str(track_point[attribute]))
+
+            if add_header_attributes:
+                feature.setAttribute('track_id', json_track['id'])
+                start_date_time = datetime.datetime.fromtimestamp(json_track['metadata']['startDate'] / 1000)
+                end_date_time = datetime.datetime.fromtimestamp(json_track['metadata']['endDate'] / 1000)
+                feature.setAttribute('metadataStartDate', str(start_date_time))
+                feature.setAttribute('metadataEndDate', str(end_date_time))
+                feature.setAttribute('metadataDuration', json_track['metadata']['duration'])
+                feature.setAttribute('metadataLength', json_track['metadata']['length'])
+                feature.setAttribute('metadataNumberOfPoints', json_track['metadata']['numberOfPoints'])
+                if metadata_tags:
+                    feature.setAttribute('metadataTags', str(metadata_tags))
 
             sink.addFeature(feature, QgsFeatureSink.FastInsert)
             feedback.setProgress(int(current * total))

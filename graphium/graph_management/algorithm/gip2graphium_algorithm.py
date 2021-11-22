@@ -142,8 +142,7 @@ class Gip2GraphiumAlgorithm(QgsProcessingAlgorithm):
         self.addParameter(QgsProcessingParameterFile(self.INPUT,
                                                      self.tr('GIP.at file'),
                                                      # QgsProcessingParameterFile.Behavior.File, '*.gpx',
-                                                     # >1 extension not possible (QGIS Dev Vol 154 Issue 49 Message 3)
-                                                     0, 'txt', None, False, "*.txt;*.zip"))
+                                                     0, 'zip', None, False))
 
         # read server connections and prepare enum items
         self.server_name_options.clear()
@@ -179,7 +178,7 @@ class Gip2GraphiumAlgorithm(QgsProcessingAlgorithm):
                                                        '', False, True))
 
         self.addParameter(QgsProcessingParameterEnum(self.IMPORT_FRCS, self.tr('Function Road Classes (FRCs)'),
-                                                     self.frc_options, True, [1, 2, 3, 4, 5, 6, 7, 8, 9], False))
+                                                     self.frc_options, True, [1, 2, 3, 4, 5], False))
 
         self.addParameter(QgsProcessingParameterEnum(self.ACCESS_TYPES, self.tr('Access types'),
                                                      self.access_options, True, [2], False))
@@ -299,9 +298,9 @@ class Gip2GraphiumAlgorithm(QgsProcessingAlgorithm):
             args.extend(['-vf', valid_from])
         if valid_to != '':
             args.extend(['-vt', valid_to])
-        if len(import_frcs_indexes) > 0:
+        if 0 < len(import_frcs_indexes) < len(FunctionalRoadClass):
             args.extend(['--import-frcs', import_frcs])
-        if len(access_types_indexes) > 0:
+        if 0 < len(access_types_indexes) < len(Access):
             args.extend(['--access-types', access_types])
         args.append('--skip-pixel-cut')
         # '--valid-from', valid_from, '--valid-to', valid_to,

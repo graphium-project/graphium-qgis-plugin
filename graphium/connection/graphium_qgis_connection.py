@@ -38,7 +38,7 @@ from ..settings import Settings
 class GraphiumQGISConnectionManager:
     """QGIS Plugin Implementation."""
 
-    def __init__(self, iface, connection):
+    def __init__(self, iface, connection, action=""):
         """Constructor.
 
         :param iface: An interface instance that will be passed to this class
@@ -72,6 +72,13 @@ class GraphiumQGISConnectionManager:
         #     self.dlg.cboServer.addItem(server_type.name, server_type.value)
         # self.dlg.cboServer.setCurrentText(self.connection.server.name)
 
+        if action == 'new':
+            self.dlg.setWindowTitle("New Graphium connection")
+        elif action == 'edit':
+            self.dlg.setWindowTitle("Edit Graphium connection")
+        else:
+            self.dlg.setWindowTitle("Graphium connection")
+
         self.dlg.txtName.setText(self.connection.name)
 
         # self.dlg.txtHost.setText(self.connection.host)
@@ -79,10 +86,11 @@ class GraphiumQGISConnectionManager:
         # self.dlg.txtBaseUrl.setText(self.connection.base_url)
         self.dlg.txtSimpleUrl.setText(self.connection.get_simple_url())
 
-        self.dlg.authConfigSelect.setConfigId(self.connection.auth_cfg)
         if self.settings.get_value('enable_auth', False):
             self.dlg.lblAuthLabel.setVisible(True)
             self.dlg.authConfigSelect.setVisible(True)
+            if isinstance(self.connection.auth_cfg, str) and self.connection.auth_cfg != '':
+                self.dlg.authConfigSelect.setConfigId(self.connection.auth_cfg)
         else:
             self.dlg.lblAuthLabel.setVisible(False)
             self.dlg.authConfigSelect.setVisible(False)

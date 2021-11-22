@@ -194,8 +194,8 @@ class GraphiumQGISGraphManager:
         if selected_index != -1:
             self.dlg.cboConnections.setCurrentIndex(selected_index)
 
-    def open_connection_editor(self, connection):
-        connection_manager = GraphiumQGISConnectionManager(self.iface, connection)
+    def open_connection_editor(self, connection, action='new'):
+        connection_manager = GraphiumQGISConnectionManager(self.iface, connection, action)
         if connection_manager.run():
             return True
         else:
@@ -204,7 +204,7 @@ class GraphiumQGISGraphManager:
     def new_connection(self):
         # selected_connection_index = self.dlg.cboConnections.currentIndex()
         new_connection = Connection()
-        if self.open_connection_editor(new_connection):
+        if self.open_connection_editor(new_connection, 'new'):
             self.connection_manager.connections.append(new_connection)
         self.connection_manager.save_connections()
         self.read_connections(new_connection.name)
@@ -212,7 +212,7 @@ class GraphiumQGISGraphManager:
     def edit_connection(self):
         selected_connection_name = self.dlg.cboConnections.currentData()
         selected_connection = self.connection_manager.select_graphium_server(selected_connection_name)
-        self.open_connection_editor(selected_connection)
+        self.open_connection_editor(selected_connection, 'edit')
         self.connection_manager.save_connections()
         self.read_connections(selected_connection.name)
 

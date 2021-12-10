@@ -604,10 +604,6 @@ class GraphiumQGISGraphManager:
                 DownloadGraphVersionAlgorithm.GRAPH_VERSION: graph_version['version']
             }
 
-        if self.settings.is_hd_enabled():
-            parameters[DownloadGraphVersionAlgorithm.HD_WAYSEGMENTS] =\
-                True if graph_version.get('type', '') == 'hdwaysegment' else False
-
         try:
             processing.execAlgorithmDialog("Graphium:DownloadGraphVersion", parameters)
         except QgsProcessingException:

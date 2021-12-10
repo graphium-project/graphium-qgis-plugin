@@ -34,16 +34,19 @@ class Settings:
 
     @staticmethod
     def get_locale():
-        return QSettings().value('locale/userLocale', 'en_US')[0:2]
+        value = QSettings().value('locale/userLocale', 'en_US')
+        return value[0:2] if isinstance(value, str) else 'en'
 
     # graphium
 
     @staticmethod
     def set_graphium_servers(output_list):
+        # TODO change data type from JSON to QStringList
         QSettings().setValue("plugin-graphium/connections", json.dumps(output_list))
 
     @staticmethod
     def get_graphium_servers():
+        # TODO change data type from JSON to QStringList
         return json.loads(QSettings().value('plugin-graphium/connections', "[]"))
 
     @staticmethod
@@ -81,10 +84,19 @@ class Settings:
     # hd
 
     def set_hd_enabled(self, hd_enabled):
+        """
+        deprecated
+        :param hd_enabled:
+        :return:
+        """
         if type(hd_enabled) is bool:
             QSettings().setValue(self.plugin_id + '/hd_enabled', hd_enabled)
 
     def is_hd_enabled(self) -> bool:
+        """
+        deprecated
+        :return:
+        """
         hd_enabled = QSettings().value(self.plugin_id + '/hd_enabled', 'not_set')
         if hd_enabled == 'not_set':
             # set default value

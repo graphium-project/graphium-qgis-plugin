@@ -36,6 +36,7 @@ from qgis.core import (QgsVectorLayer, QgsProcessingAlgorithm, QgsProcessingPara
                        QgsProcessingParameterBoolean, QgsProcessingParameterFileDestination)
 # plugin
 from ....graphium.graphium_graph_data_api import GraphiumGraphDataApi
+from ....graphium.graphium_graph_management_api import GraphiumGraphManagementApi
 from ....graphium.connection.graphium_connection_manager import GraphiumConnectionManager
 from ....graphium.settings import Settings
 
@@ -48,7 +49,6 @@ class DownloadGraphVersionAlgorithm(QgsProcessingAlgorithm):
     SERVER_NAME = 'SERVER_NAME'
     GRAPH_NAME = 'GRAPH_NAME'
     GRAPH_VERSION = 'GRAPH_VERSION'
-    HD_WAYSEGMENTS = 'HD_WAYSEGMENTS'
 
     SAVE_JSON_FILE = 'SAVE_JSON_FILE'
     OUTPUT_SEGMENT_COUNT = 'OUTPUT_SEGMENT_COUNT'
@@ -133,10 +133,6 @@ class DownloadGraphVersionAlgorithm(QgsProcessingAlgorithm):
         self.addParameter(QgsProcessingParameterString(self.GRAPH_VERSION, self.tr('Graph version'),
                                                        default_graph_version, False, True))
 
-        if self.settings.is_hd_enabled():
-            self.addParameter(QgsProcessingParameterBoolean(self.HD_WAYSEGMENTS, self.tr('HD Waysegments'),
-                                                            False, True))
-
         self.addParameter(QgsProcessingParameterBoolean(self.SAVE_JSON_FILE, self.tr('Save JSON file'),
                                                         'False', True))
 
@@ -155,29 +151,35 @@ class DownloadGraphVersionAlgorithm(QgsProcessingAlgorithm):
         server_name = self.connection_options[self.parameterAsInt(parameters, self.SERVER_NAME, context)]
         graph_name = self.parameterAsString(parameters, self.GRAPH_NAME, context)
         graph_version = self.parameterAsString(parameters, self.GRAPH_VERSION, context)
-        if self.settings.is_hd_enabled():
-            is_hd_segments = self.parameterAsBool(parameters, self.HD_WAYSEGMENTS, context)
-        else:
-            is_hd_segments = False
         save_json_file = self.parameterAsBoolean(parameters, self.SAVE_JSON_FILE, context)
         json_file = self.parameterAsFileOutput(parameters, self.OUTPUT_JSON, context)
 
         # Connect to Graphium
         feedback.pushInfo("Connect to Graphium server '" + server_name + "' ...")
 
-        graphium = GraphiumGraphDataApi(feedback)
+        graphium_data = GraphiumGraphDataApi(feedback)
+        graphium_management = GraphiumGraphManagementApi(feedback)
         selected_connection = self.connection_manager.select_graphium_server(server_name)
 
         if selected_connection is None:
             feedback.reportError('Cannot select connection to Graphium', True)
             return {self.OUTPUT_SEGMENTS: None}
 
-        if graphium.connect(selected_connection) is False:
+        if graphium_management.connect(selected_connection) is False:
+            feedback.reportError('Cannot connect to Graphium', True)
+            return {self.OUTPUT_SEGMENTS: None}
+        if graphium_data.connect(selected_connection) is False:
             feedback.reportError('Cannot connect to Graphium', True)
             return {self.OUTPUT_SEGMENTS: None}
 
+        metadata = graphium_management.get_graph_version_metadata(graph_name, graph_version)
+
+        if not metadata['type']:
+            feedback.reportError('Cannot correctly retrieve graph metadata', True)
+            return {self.OUTPUT_SEGMENTS: None}
+
         feedback.pushInfo("Start downloading task on Graphium server '" + server_name + "' ...")
-        response = graphium.export_graph(graph_name, graph_version, is_hd_segments)
+        response = graphium_data.export_graph(graph_name, graph_version, metadata.get('type') == 'hdwaysegment')
 
         if save_json_file:
             feedback.pushInfo("Write graph to JSON file...")

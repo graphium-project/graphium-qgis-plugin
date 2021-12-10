@@ -81,6 +81,13 @@ class GraphiumGraphManagementApi(GraphiumApi):
         else:
             return versions
 
+    def get_graph_version_metadata(self, graph_name, graph_version):
+        if self.connection is None:
+            return []
+
+        url = self.connection.get_connection_url() + '/metadata/graphs/' + graph_name + '/versions/' + graph_version
+        return self.process_get_call(url, None)
+
     def add_graph_version_new(self, new_graph_file, graph_name, graph_version, is_hd_segments, override_if_exists):
         if self.connection is None:
             return {"error": {"msg": "No connection selected"}}

@@ -1,0 +1,13 @@
+GIMP Palette
+Name: QGIS Palette
+Columns: 4
+#
+174 235 255	road
+255 245 155	walkway
+195 237 169	bicycle_lane
+241 183 255	busstop
+255 245 155	walkway
+241 183 255	bus_lane
+237 237 237	default
+255 245 155	crosswalk
+209 255 177	shared_walkway

@@ -586,7 +586,6 @@ class GraphiumQGISGraphManager:
         # update ui
         self.switch_to_graph_version_view()
 
-
     def download_graph_version_to_map(self):
         """
         Calls an algorithm to download the selected graph version

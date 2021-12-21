@@ -32,6 +32,10 @@ class Settings:
 
     plugin_id = 'plugin-graphium'
 
+    def __init__(self):
+        # TODO remove deprecated setting /hd_enabled
+        pass
+
     @staticmethod
     def get_locale():
         value = QSettings().value('locale/userLocale', 'en_US')

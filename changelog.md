@@ -1,4 +1,4 @@
-v1.2 (2021-xx-xx)
+v1.2 (2021-12-21)
    * [Feature] [manager] Added graph name task menu button
    * [Feature] [manager] Added graph version task menu button
    * [Feature] [utility] New algorithm TrajectoryToPoints Converter

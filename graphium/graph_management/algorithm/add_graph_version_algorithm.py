@@ -100,7 +100,8 @@ class AddGraphVersionAlgorithm(QgsProcessingAlgorithm):
         """
 
         self.addParameter(QgsProcessingParameterFile(self.SOURCE_FILE, self.tr('Input graph file'),
-                                                     0, 'json', None, False, "*.json;*.zip"))
+                                                     QgsProcessingParameterFile.Behavior.File, optional=False))
+                                                     # fileFilter="*.json;*.zip"))  # does not work in QGIS 3.22
 
         # read server connections and prepare enum items
         self.server_name_options.clear()

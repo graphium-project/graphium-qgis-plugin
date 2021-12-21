@@ -129,20 +129,17 @@ class Gip2GraphiumAlgorithm(QgsProcessingAlgorithm):
 
         # We add the input vector layer. It can have any kind of geometry
         # It is a mandatory (not optional) one, hence the False argument
-        # self.addParameter(QgsProcessingParameterFeatureSource(self.INPUT, self.tr('Input gpx file'),
-        #                                                       [QgsProcessing.TypeVectorLine]))
+
         source_java = QSettings().value('plugin-graphium/java_exe', '')
-        self.addParameter(QgsProcessingParameterFile(self.INPUT_JAVA,
-                                                     self.tr('Java Runtime Environment (JRE) file'),
-                                                     0, 'exe', source_java, False))
+        self.addParameter(QgsProcessingParameterFile(self.INPUT_JAVA, self.tr('Java Runtime Environment (JRE) file'),
+                                                     QgsProcessingParameterFile.Behavior.File, 'exe', source_java,
+                                                     False))
         source_idf2graphium = QSettings().value('plugin-graphium/idf2graphium_jar', '')
-        self.addParameter(QgsProcessingParameterFile(self.INPUT_IDF2GRAPHIUM,
-                                                     self.tr('IDF2Graphium JAR file'),
-                                                     0, 'jar', source_idf2graphium, False))
-        self.addParameter(QgsProcessingParameterFile(self.INPUT,
-                                                     self.tr('GIP.at file'),
-                                                     # QgsProcessingParameterFile.Behavior.File, '*.gpx',
-                                                     0, 'zip', None, False))
+        self.addParameter(QgsProcessingParameterFile(self.INPUT_IDF2GRAPHIUM, self.tr('IDF2Graphium JAR file'),
+                                                     QgsProcessingParameterFile.Behavior.File, 'jar',
+                                                     source_idf2graphium, False))
+        self.addParameter(QgsProcessingParameterFile(self.INPUT, self.tr('GIP.at file'),
+                                                     QgsProcessingParameterFile.Behavior.File, 'zip', None, False))
 
         # read server connections and prepare enum items
         self.server_name_options.clear()

@@ -118,9 +118,8 @@ class MapMatcherAlgorithm(QgsProcessingAlgorithm):
         #                                                       [QgsProcessing.TypeVectorLine]))
         self.addParameter(QgsProcessingParameterFile(self.INPUT,
                                                      self.tr('Input track file'),
-                                                     # QgsProcessingParameterFile.Behavior.File, '*.gpx',
-                                                     # >1 extension not possible (QGIS Dev Vol 154 Issue 49 Message 3)
-                                                     0, 'json', None, False, "*.gpx;*.json"))
+                                                     QgsProcessingParameterFile.Behavior.File, 'json',
+                                                     None, False))  # , "*.gpx;*.json"))  # does not work in QGIS 3.22
 
         # read server connections and prepare enum items
         self.server_name_options.clear()

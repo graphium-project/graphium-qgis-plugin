@@ -60,7 +60,7 @@ class GraphiumConnectionManager:
                     c['name'], GraphiumServerType(c['server_type']),
                     c['host'], c['port'],
                     c['base_url'] if c['base_url'] else '',
-                    c['auth_cfg'] if c['auth_cfg'] else '',
+                    c['auth_cfg'] if isinstance(c['auth_cfg'], str) else '',
                     bool(c['read_only']) if 'read_only' in c and isinstance(c['read_only'], bool) else True
                 )
                 self.connections.append(connection)
@@ -71,6 +71,7 @@ class GraphiumConnectionManager:
                     self.connections.append(Connection(c[0], GraphiumServerType(c[1]), c[2], c[3],
                                                        c[4] if len(c) > 5 else '',
                                                        bool(c[5]) if len(c) > 5 else True))
+                self.save_connections()  # replace deprecated list with dict
         return self.connections
 
     def select_graphium_server(self, server_name, server_type=None):

@@ -35,7 +35,7 @@ class Connection:
         self.host = host
         self.port = port
         self.base_url = base_url
-        self.auth_cfg = auth_cfg
+        self.auth_cfg = auth_cfg if isinstance(auth_cfg, str) else ''
         self.read_only = read_only
 
     def get_connection_url(self):

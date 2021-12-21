@@ -160,7 +160,7 @@ class PointsToTrajectoryAlgorithm(QgsProcessingAlgorithm):
             meta_tags = json.loads(track_tags)
 
         base_timestamp = QDateTime(QDate(1970, 1, 1), QTime(0, 0, 0), QTimeZone.utc())
-        base_timestamp_sec = base_timestamp.toMSecsSinceEpoch()
+        base_timestamp_ms = base_timestamp.toMSecsSinceEpoch()
 
         previous_feature = None
         previous_track_point = None
@@ -177,8 +177,8 @@ class PointsToTrajectoryAlgorithm(QgsProcessingAlgorithm):
                 # feedback.pushInfo("Geometry not available. Point skipped.")
                 continue
 
-            feature_timestamp_sec = feature[timestamp_field].toMSecsSinceEpoch()
-            timestamp = int((feature_timestamp_sec - base_timestamp_sec))
+            feature_timestamp_ms = feature[timestamp_field].toMSecsSinceEpoch()
+            timestamp = int((feature_timestamp_ms - base_timestamp_ms))
 
             meta_start_date = timestamp if meta_start_date is None else meta_start_date
             meta_end_date = timestamp

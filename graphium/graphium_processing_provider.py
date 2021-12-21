@@ -25,14 +25,13 @@
 
 import os
 # PyQt5 imports
-from PyQt5.QtGui import (QIcon)
+from qgis.PyQt.QtGui import (QIcon)
 # qgis imports
 from qgis.core import (QgsProcessingProvider)
 # plugin imports
 from ..graphium.utilities.algorithm.mapmatcher_algorithm import (MapMatcherAlgorithm)
 from ..graphium.utilities.algorithm.track_gpx2json_algorithm import (TrackGpx2JsonAlgorithm)
 from ..graphium.utilities.algorithm.routing_algorithm import (RoutingAlgorithm)
-from ..graphium.utilities.algorithm.linestring_to_track_algorithm import (LinestringToTrackAlgorithm)
 from ..graphium.utilities.algorithm.points_to_trajectory_algorithm import (PointsToTrajectoryAlgorithm)
 from ..graphium.utilities.algorithm.trajectory_to_points_algorithm import (TrajectoryToPointsAlgorithm)
 from ..graphium.graph_data.algorithm.add_segment_geometry_algorithm import (AddSegmentGeometryAlgorithm)

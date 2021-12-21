@@ -1,14 +1,32 @@
 v1.2 (2021-xx-xx)
- * [Feature] [manager] Added graph name task menu button
- * [Feature] [manager] Added graph version task menu button
- * [Feature] [utility] New algorithm Trajectory to Points Converter
- * [Feature] [utility] New parameter routing_mode in mapmatching algorithm 
- * [Improvement] [manager] Activate graph version moved to task menu button
- * [Improvement] [manager] Delete graph version moved to task menu button
- * [Improvement] [graph_data] Friendly error message if input file is missing at graph import
- * [Improvement] [graph_data] Faster AddSegmentGeometry algorithm as batches are created instead of single requests
- * [Improvement] [utility] Correctly calculate track duration in gpx2json algorithm
- * [Improvement] [utility] Add track point id to JSON output of PointsToTrajectory algorithm
+   * [Feature] [manager] Added graph name task menu button
+   * [Feature] [manager] Added graph version task menu button
+   * [Feature] [utility] New algorithm TrajectoryToPoints Converter
+   * [Feature] [utility] New parameter routing_mode in mapmatching algorithm
+   * [Feature] [utility] optionally add header attributes in trajectoryToPoints alg
+   * [Feature] [graph data] Automatically detect graph type at downloadGraphVersion alg
+   * [Feature] [graph data] add geometry as attribute option to update segment attribute algorithm
+   * [Feature] Add graph select dialog, which can be used in sub-plugins
+   * [Feature] Add qgis hd segment style files in qgis directory
+   * [Improvement] [manager] Activate graph version moved to task menu button
+   * [Improvement] [manager] Delete graph version moved to task menu button
+   * [Improvement] [graph_data] Friendly error message if input file is missing at graph import
+   * [Improvement] [graph_data] Faster AddSegmentGeometry algorithm as batches are created instead of single requests
+   * [Improvement] [graph data] do not log missing geometry at add segment geometry alg in order to reduce logging
+   * [Improvement] [graph data] modify updateSegmentAttribute alg to non-feature-based alg
+   * [Improvement] [graph data] create JSON lists for access attr in download graph version alg
+   * [Improvement] [utility] Correctly calculate track duration in gpx2json algorithm
+   * [Improvement] [utility] Add track point id to JSON output of PointsToTrajectory algorithm
+   * [Improvement] [utility] check if timestamp and geometry are available in PointsToTrajectory alg
+   * [Improvement] [utility] only add z if 3d in PointsToTrajectory algorithm
+   * [Improvement] [utility] set gpx2json in map-matcher alg als child algorithm
+   * [Improvement] [gip2graphium] Do not add frc and access arguments if all options are selected
+   * [Improvement] [connection] Mention create or edit action in dialog header
+   * [Improvement] [http-rest-api] Optionally do not write url to feedback
+   * [Improvement] [http-rest-api] add timeout parameter to get requests
+   * [Fixed] Do not use fileFilter at initializing QgsProcessingParameterFile temporarily
+   * [Fixed] [http rest api] Only use setTransferTimeout for request if function is available
+   * [Deprecated] Setting hd_enabled deprecated
 
 v1.1 (2021-03-23)
 

@@ -25,9 +25,9 @@
 
 import os
 # PyQt5 imports
-from PyQt5.QtGui import (QIcon)
-# qgis imports
+from qgis.PyQt.QtGui import (QIcon)
 from qgis.PyQt.QtCore import QCoreApplication
+# qgis imports
 from qgis.core import (QgsProcessingAlgorithm, QgsProcessingParameterField, QgsProcessingParameterFeatureSource,
                        QgsProcessingParameterString, QgsProcessingParameterFeatureSink, QgsProcessing, QgsGeometry,
                        QgsWkbTypes, QgsFeatureSink, QgsCoordinateReferenceSystem, QgsProcessingOutputNumber,
@@ -210,7 +210,8 @@ class AddSegmentGeometryAlgorithm(QgsProcessingAlgorithm):
                 feature.setGeometry(segment_geometries[int(feature[field_segment_id])])
                 segments_with_geometry += 1
             else:
-                feedback.pushInfo("No geometry for segment " + str(feature[field_segment_id]))
+                pass
+                # feedback.pushInfo("No geometry for segment " + str(feature[field_segment_id]))
 
             sink.addFeature(feature, QgsFeatureSink.FastInsert)
 
